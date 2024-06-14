@@ -1,2 +1,2 @@
-# banana-math
-Math is bananas
+# Banana Math :)
+We're creating a user-friendly website for mental math practice that's all about simplicity and speed. Our mission? To make math practice effortless and enjoyable. We're carefully building our tech stack, prioritizing quality over quantity at every step. Testing is a big part of our process to ensure everything runs smoothly. With a strong focus on user experience and an agile approach, we're excited to bring you a top-notch math practice platform. Ready to dive in and crunch some numbers with us?
