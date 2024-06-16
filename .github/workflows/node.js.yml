@@ -14,7 +14,13 @@ on:
     tags:
       -  "*.*.*"
   pull_request:
-    branches: [ $default-branch ]
+    branches:
+    - $default_branch
+    - master
+    - matrix
+    types:
+    - closed
+    - opened
 
 
 jobs:
@@ -68,7 +74,7 @@ jobs:
             bhrugur1/banana-math           
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}}
             type=sha 
       -
         name: Set up QEMU
