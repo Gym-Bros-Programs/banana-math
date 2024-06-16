@@ -11,8 +11,11 @@ on:
       - '*/*'       # matches every branch containing a single '/'
       - '**'        # matches every branch
       - '!master'   # excludes master
+    tags:
+      -  "*.*.*"
   pull_request:
     branches: [ $default-branch ]
+
 
 jobs:
   build:
