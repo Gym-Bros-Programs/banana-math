@@ -76,4 +76,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: bhrugur1/banana-math:${git_branch}.${git_hash}
+          tags: bhrugur1/banana-math:${git_hash}
