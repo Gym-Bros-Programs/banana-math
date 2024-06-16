@@ -70,4 +70,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: bhrugur1/banana-math:latest
+          tags: bhrugur1/banana-math:$GITHUB_REF-$GITHUB_SHA
