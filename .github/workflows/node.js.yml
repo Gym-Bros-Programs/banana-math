@@ -34,3 +34,25 @@ jobs:
     - run: npm ci
     - run: npm run build
     - run: npm test
+
+  security:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: false
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --severity-threshold=critical
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+         ref: ${{ github.ref }}
+      - run: cat src/tests/test.tsx
