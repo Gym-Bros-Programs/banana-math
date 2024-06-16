@@ -55,8 +55,8 @@ jobs:
     steps:
       - name: Get tags for docker
         uses: actions/checkout@master
-      - run: git_hash=$(git rev-parse --short "$GITHUB_SHA")
-      - run: git_branch=${GITHUB_REF#refs/heads/}
+      - run: export git_hash=$(git rev-parse --short "$GITHUB_SHA")
+      - run: exprot git_branch=${GITHUB_REF#refs/heads/}
       - run: echo ${git_branch}.${git_hash}
       -
         name: Set up QEMU
