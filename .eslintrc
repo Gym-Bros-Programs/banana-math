@@ -1,5 +1,4 @@
 {
-    "ignoreDuringBuilds": true,
   // Configuration for JavaScript files
   "extends": [
     "airbnb-base",
@@ -68,5 +67,6 @@
         ]
       }
     }
-  ]
+  ],
+  "ignoreDuringBuilds": true
 }
