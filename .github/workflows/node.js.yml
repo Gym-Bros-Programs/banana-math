@@ -12,9 +12,15 @@ on:
       - '**'        # matches every branch
       - '!master'   # excludes master
     tags:
-      -  "*.*.*"
+      -  "v*.*.*"
   pull_request:
-    branches: [ $default-branch ]
+    branches:
+    - $default_branch
+    - master
+    - matrix
+    types:
+    - closed
+    - opened
 
 
 jobs:
@@ -68,8 +74,8 @@ jobs:
             bhrugur1/banana-math           
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=semver,pattern={{major}}.{{minor}}
             type=sha 
+            type=ref,event=tag
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
