@@ -65,6 +65,7 @@ jobs:
             bhrugur1/banana-math           
           # generate Docker tags based on the following events/attributes
           tags: |
+            type=semver,pattern={{major}}.{{minor}}
             type=sha 
       -
         name: Set up QEMU
@@ -81,6 +82,7 @@ jobs:
       -
         name: Build and push
         uses: docker/build-push-action@v5
+
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
