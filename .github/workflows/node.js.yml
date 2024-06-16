@@ -50,7 +50,7 @@ jobs:
           args: --severity-threshold=critical
   build_push_docker:
     needs: [security]
-    name: build & push docker image to hub
+    name: build & push image 
     runs-on: ubuntu-latest
     steps:
       -
@@ -70,4 +70,4 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: banana-math:latest
+          tags: bhrugur1/banana-math:latest
