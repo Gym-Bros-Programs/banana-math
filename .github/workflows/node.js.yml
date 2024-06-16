@@ -75,7 +75,7 @@ jobs:
           # generate Docker tags based on the following events/attributes
           tags: |
             type=sha 
-            type=ref,event=tags
+            type=ref,event=tag
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3
