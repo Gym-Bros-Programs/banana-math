@@ -6,10 +6,10 @@ function getRandomNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const BUTTON_CLASS = 'bg-zinc-700 text-zinc-400 px-3 py-1 rounded';
-const TEXT_CLASS = 'text-zinc-400 hover:text-zinc-200';
-const INPUT_CLASS = 'bg-zinc-700 text-zinc-200 p-2 rounded w-1/2 text-center';
-const SUBMIT_BUTTON_CLASS = 'bg-yellow-500 text-zinc-900 px-4 py-2 rounded';
+// const BUTTON_CLASS = 'bg-zinc-700 text-zinc-400 px-3 py-1 rounded';
+// const TEXT_CLASS = 'text-zinc-400 hover:text-zinc-200';
+// const INPUT_CLASS = 'bg-zinc-700 text-zinc-200 p-2 rounded w-1/2 text-center';
+// const SUBMIT_BUTTON_CLASS = 'bg-yellow-500 text-zinc-900 px-4 py-2 rounded';
 
 export default function MonkeyMath() {
   const [problem, setProblem] = useState<string>('');
@@ -60,6 +60,7 @@ export default function MonkeyMath() {
       setMessage('Correct!');
       setIsCorrect(true);
     } else {
+      
       setMessage(`Incorrect! The correct answer is ${result}.`);
       setIsCorrect(false);
     }
@@ -102,11 +103,11 @@ export default function MonkeyMath() {
           />
           <span className="text-xl font-bold">BananaMath</span>
         </div>
-        <div className="flex items-center space-x-4">
+        {/* <div className="flex items-center space-x-4">
           <button className={TEXT_CLASS}>Contact</button>
           <button className={TEXT_CLASS}>Support</button>
           <button className={TEXT_CLASS}>Settings</button>
-        </div>
+        </div> */}
       </header>
       <div className="flex min-h-full w-full flex-col items-center">
         <div className="mb-2 flex items-center justify-center">

@@ -7,9 +7,12 @@ import { AppConfig } from '../utils/AppConfig';
 // import { VerticalFeatures } from './VerticalFeatures';
 import MonkeyMath from './MonkeyMath';
 
+import DrawerBasic from '../layout/NavBar';
+
 const Base = () => (
   <div className="text-gray-600 antialiased">
     <Meta title={AppConfig.title} description={AppConfig.description} />
+    <DrawerBasic />
     <MonkeyMath />
   </div>
 );
