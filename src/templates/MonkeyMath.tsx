@@ -94,7 +94,7 @@ export default function MonkeyMath() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-between bg-zinc-800 p-4 text-zinc-200">
-      <header className="mb-8 flex w-full items-center justify-between">
+      {/* <header className="mb-8 flex w-full items-center justify-between">
         <div className="flex items-center space-x-4">
           <img
             src="https://placehold.co/40x40"
@@ -103,12 +103,12 @@ export default function MonkeyMath() {
           />
           <span className="text-xl font-bold">BananaMath</span>
         </div>
-        {/* <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4">
           <button className={TEXT_CLASS}>Contact</button>
           <button className={TEXT_CLASS}>Support</button>
           <button className={TEXT_CLASS}>Settings</button>
-        </div> */}
-      </header>
+        </div>
+      </header> */}
       <div className="flex min-h-full w-full flex-col items-center">
         <div className="mb-2 flex items-center justify-center">
           {/* Display the time left */}
