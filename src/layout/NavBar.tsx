@@ -13,8 +13,16 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 // import AdbIcon from '@mui/icons-material/Adb';
 import BananaIcon from '@mui/icons-material/FastFood';
+import HomeIcon from '@mui/icons-material/Home';
+import InfoIcon from '@mui/icons-material/Info';
+import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
+import ScoreBoard from '@mui/icons-material/Score';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 
-const pages = ['Home', 'About', 'Questions', 'Scores', 'Leaderboard'];
+const pages = [ 'Home', 'About', 'Contact', 'Score', 'Leaderboard' ];
+
+const icons = [{name: 'Home', icon: <HomeIcon />}, {name: 'About', icon: <InfoIcon />}, {name: 'Contact', icon: <QuestionAnswerIcon />}, {name: 'Stats', icon: <ScoreBoard/>}, {name: 'Leaderboard', icon: <LeaderboardIcon />}];
+
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
 function ResponsiveAppBar() {
@@ -87,11 +95,7 @@ function ResponsiveAppBar() {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
-                </MenuItem>
-              ))}
+              
             </Menu>
           </Box>
           <BananaIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -111,15 +115,12 @@ function ResponsiveAppBar() {
               BananaMath
             </Typography>
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-              >
-                {page}
-              </Button>
-            ))}
+              {icons.map((icon) => (
+                <Button key={icon.name} color="inherit" startIcon={icon.icon}>
+                  {icon.name}
+                </Button>
+              ))}
+              
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
