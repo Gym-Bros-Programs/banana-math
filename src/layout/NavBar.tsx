@@ -19,7 +19,8 @@ import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import ScoreBoard from '@mui/icons-material/Score';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 
-const pages = [ 'Home', 'About', 'Contact', 'Score', 'Leaderboard' ];
+
+// const pages = [ 'Home', 'About', 'Contact', 'Score', 'Leaderboard' ];
 
 const icons = [{name: 'Home', icon: <HomeIcon />}, {name: 'About', icon: <InfoIcon />}, {name: 'Contact', icon: <QuestionAnswerIcon />}, {name: 'Stats', icon: <ScoreBoard/>}, {name: 'Leaderboard', icon: <LeaderboardIcon />}];
 
@@ -45,7 +46,7 @@ function ResponsiveAppBar() {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: 'black',  boxShadow: '0px 3px 5px 2px rgba(0, 0, 0, .3)' }}>
+    <AppBar position="fixed" sx={{ backgroundColor: 'black',  boxShadow: '0px 3px 5px 2px rgba(0, 0, 0, .3)' }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {/* <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} /> */}

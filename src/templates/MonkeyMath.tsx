@@ -93,7 +93,7 @@ export default function MonkeyMath() {
   }, [timerStarted, timeLeft]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-between bg-zinc-800 p-4 text-zinc-200">
+    <div className="flex min-h-screen flex-col items-center justify-between bg-zinc-800 pt-40 text-zinc-200">
       {/* <header className="mb-8 flex w-full items-center justify-between">
         <div className="flex items-center space-x-4">
           <img
