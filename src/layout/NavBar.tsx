@@ -23,9 +23,21 @@ import { Link } from 'react-router-dom';
 
 // const pages = [ 'Home', 'About', 'Contact', 'Score', 'Leaderboard' ];
 
-const icons = [{name: 'Home', icon: <HomeIcon />}, {name: 'About', icon: <InfoIcon />}, {name: 'Contact', icon: <QuestionAnswerIcon />}, {name: 'Stats', icon: <ScoreBoard/>}, {name: 'Leaderboard', icon: <LeaderboardIcon />}];
+// const icons = [{name: 'Home', icon: <HomeIcon />}, {name: 'About', icon: <InfoIcon />}, {name: 'Contact', icon: <QuestionAnswerIcon />}, {name: 'Stats', icon: <ScoreBoard/>}, {name: 'Leaderboard', icon: <LeaderboardIcon />}];
 
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+
+
+const icons = [
+  { name: 'Home', icon: <HomeIcon /> },
+  { name: 'About', icon: <InfoIcon /> },
+  { name: 'Contact', icon: <QuestionAnswerIcon /> },
+  { name: 'Stats', icon: <ScoreBoard /> },
+  { name: 'Leaderboard', icon: <LeaderboardIcon /> },
+];
+
+
+
+const settings = ['Profile', 'Account', 'Dashboard', 'Login', 'Logout'];
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);

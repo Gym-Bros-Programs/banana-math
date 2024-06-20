@@ -8,9 +8,14 @@ import { AppConfig } from '../utils/AppConfig';
 import MonkeyMath from './MonkeyMath';
 import DrawerBasic from '../layout/NavBar';
 
+import React from 'react';
+
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
+
+
 const Base = () => (
+  
   <div className="text-gray-600 antialiased">
     <Meta title={AppConfig.title} description={AppConfig.description} />
     <DrawerBasic />
@@ -20,8 +25,3 @@ const Base = () => (
 
 export { Base };
 
-//     <Hero />
-//     <Sponsors />
-//     <VerticalFeatures />
-//     <Banner />
-//     <Footer />
