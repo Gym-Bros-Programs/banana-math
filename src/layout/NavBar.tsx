@@ -19,6 +19,7 @@ import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import ScoreBoard from '@mui/icons-material/Score';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 
+import { Link } from 'react-router-dom';
 
 // const pages = [ 'Home', 'About', 'Contact', 'Score', 'Leaderboard' ];
 
@@ -118,7 +119,7 @@ function ResponsiveAppBar() {
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {icons.map((icon) => (
                 <Button key={icon.name} color="inherit" startIcon={icon.icon}>
-                  {icon.name}
+                  
                 </Button>
               ))}
               

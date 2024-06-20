@@ -6,8 +6,9 @@ import { AppConfig } from '../utils/AppConfig';
 // import { Sponsors } from './Sponsors';
 // import { VerticalFeatures } from './VerticalFeatures';
 import MonkeyMath from './MonkeyMath';
-
 import DrawerBasic from '../layout/NavBar';
+
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
 const Base = () => (
   <div className="text-gray-600 antialiased">
