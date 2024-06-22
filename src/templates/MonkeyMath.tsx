@@ -85,10 +85,10 @@ export default function MonkeyMath() {
         throw new Error('Failed to post score');
       }
 
-      const data = await response.json();
-      console.log(data.message);
+      // const data = await response.json();
+      // console.log(data.message); // This was used to print the response message to the console for debugging purposes
     } catch (error) {
-      console.error('Error posting score:', error);
+      console.error('Error posting score:', error); // This was used to print the error to the console if there was a problem posting the score
       // Handle error (e.g., update UI to show error message)
     }
   };
@@ -221,7 +221,7 @@ export default function MonkeyMath() {
                     }, 0.2);
                   }}
                   style={{ visibility: timerEnded ? 'visible' : 'hidden' }}
-                  className="w-1/2 rounded bg-zinc-600/20 px-4 py-2 font-bold text-white hover:bg-opacity-30"
+                  className="w-1/2 rounded bg-zinc-600/20 px-4 py-2 font-bold text-white hover:bg-zinc-600/30"
                 >
                   Attempt Again
                 </button>
