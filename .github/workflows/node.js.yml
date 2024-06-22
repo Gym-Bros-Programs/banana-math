@@ -17,7 +17,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
     strategy:
       matrix:
         node-version: [22.3.0]
