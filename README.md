@@ -22,6 +22,8 @@ npm run build
 
 Local compiling using docker
 ```
-docker build . -t bananaMath
-docker run -d -p 3000:3000 bananaMath
+docker build . -t banana-math
+```
+```
+docker run -d -p 3000:3000 banana-math
 ```
