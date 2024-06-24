@@ -10,3 +10,20 @@ Stage 3: Implement the database fully and have a functional site with a working 
 Stage 4: Authentication with Supabase for user, customization, leaderboard for user, user stats tracking
 
 Stage 5: Ads and Subscription for upkeep cost, launch site!
+
+## How to build project?
+
+Local compiling 
+```
+brew install npm
+npm install next
+npm run build
+```
+
+Local compiling using docker
+```
+docker build . -t banana-math
+```
+```
+docker run -d -p 3000:3000 banana-math
+```
