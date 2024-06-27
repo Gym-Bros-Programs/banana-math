@@ -112,6 +112,9 @@ jobs:
 
       - name: Build the Next.js project
         run: npm run build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }} # Set the MONGODB_URI environment variable
+
       - name: Publish to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
