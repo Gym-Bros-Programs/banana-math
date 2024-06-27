@@ -120,7 +120,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: BananaMath
+          projectName: banana-math
           directory: .next
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           branch: deployment
