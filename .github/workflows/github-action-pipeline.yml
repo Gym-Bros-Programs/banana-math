@@ -25,6 +25,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
     env:
       MONGODB_URI: ${{ secrets.MONGODB_URI }}
     strategy:
@@ -102,6 +105,10 @@ jobs:
       contents: read
       packages: write
     steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+
       - name: Checkout
         uses: actions/checkout@v4
 
