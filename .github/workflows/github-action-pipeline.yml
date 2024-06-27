@@ -31,7 +31,8 @@ jobs:
       matrix:
         node-version: [22.3.0]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
+    outputs:
+      node_version: ${{ steps.set_output.outputs.node_version }}
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
@@ -42,7 +43,10 @@ jobs:
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test --if-present
-
+      - name: Set Node.js version output
+        id: set_output
+        run: echo "::set-output name=node_version::${{ matrix.node-version }}"
+        
   security:
     needs: [build]
     runs-on: ubuntu-latest
@@ -90,3 +94,31 @@ jobs:
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+  deploy_to_cloudflare:
+    needs: [build_push_docker]
+    if: github.ref == 'refs/heads/deployment'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version:${{ needs.build.outputs.node_version }}
+
+      - name: Install dependencies
+        run: npm ci # or 'npm install' if you prefer
+
+      - name: Build the Next.js project
+        run: npm run build
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: BananaMath
+          directory: .next
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: deployment
+          wranglerVersion: '3'
