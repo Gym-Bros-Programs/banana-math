@@ -31,7 +31,4 @@ yarn-error.log*
 # local folder
 local
 
-# vercel
-.vercel
-
 .env
