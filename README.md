@@ -13,11 +13,13 @@ Stage 5: Ads and Subscription for upkeep cost, launch site!
 
 ## How to build project?
 
+Have a look at the .env.sample file and fix
+
 Local compiling 
 ```
 brew install npm
 npm install next
-npm run build
+npm run dev
 ```
 
 Local compiling using docker
