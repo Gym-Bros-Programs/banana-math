@@ -13,7 +13,7 @@ Stage 5: Ads and Subscription for upkeep cost, launch site!
 
 ## How to build project?
 
-Have a look at the .env.sample file and fix
+Have a look at the .env.sample file and follow the steps in the link to create a .env.local
 
 Local compiling 
 ```
