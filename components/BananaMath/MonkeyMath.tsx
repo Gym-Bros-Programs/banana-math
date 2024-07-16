@@ -14,6 +14,7 @@ function getRandomNumber(min: number, max: number): number {
 }
 
 const TEXT_CLASS = "text-zinc-400 hover:text-zinc-200";
+const COUNT_DOWN_TIME = 30;
 
 export default function MonkeyMath() {
   // State variables
@@ -23,7 +24,7 @@ export default function MonkeyMath() {
   const [result, setResult] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [timerEnded, setTimerEnded] = useState<boolean>(false);
-  const [timeLeft, setTimeLeft] = useState<number>(10); // Start the timer at 10 seconds
+  const [timeLeft, setTimeLeft] = useState<number>(COUNT_DOWN_TIME);
   const [timerStarted, setTimerStarted] = useState<boolean>(false);
   const [correctCount, setCorrectCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
@@ -93,7 +94,7 @@ export default function MonkeyMath() {
   // Update the timer every second once it has started
   useEffect(() => {
     // Focus the input field when the component mounts
-    if (inputRef.current) {
+    if (inputRef.current && timeLeft > 0) {
       (inputRef.current as unknown as HTMLInputElement).focus();
     }
 
@@ -121,7 +122,7 @@ export default function MonkeyMath() {
         <div className="mb-6 text-center">
           {/* <p className="mb-5 text-2xl">{problem}</p> */}
           <p
-            className="text-xl text-gray-700"
+            className="text-x1 white"
             style={{ visibility: timerStarted ? "visible" : "hidden" }}
           >
             {timeLeft}
@@ -134,7 +135,19 @@ export default function MonkeyMath() {
             {problem}
           </p>
           <p
-            className="text-center text-2xl text-gray-700"
+            className="text-center text-2xl white"
+            hidden={!timerEnded}
+          >
+            Correct answers: {correctCount}
+          </p>
+          <p
+            className="text-center text-2xl white"
+            hidden={!timerEnded}
+          >
+            Incorrect answers: {totalCount - correctCount}
+          </p>
+          <p
+            className="text-center text-2xl white"
             hidden={!timerEnded}
           >
             {totalCount > 0
@@ -164,7 +177,7 @@ export default function MonkeyMath() {
                 onClick={() => {
                   promptMathProblem();
                   setTimerStarted(false);
-                  setTimeLeft(10); // Reset the timer to 10 seconds
+                  setTimeLeft(COUNT_DOWN_TIME);
                   setTimerEnded(false);
                   setCorrectCount(0);
                   setTotalCount(0);
