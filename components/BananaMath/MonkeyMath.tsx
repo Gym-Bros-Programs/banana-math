@@ -14,7 +14,7 @@ function getRandomNumber(min: number, max: number): number {
 }
 
 const TEXT_CLASS = "text-zinc-400 hover:text-zinc-200";
-const COUNT_DOWN_TIME = 30;
+const COUNT_DOWN_TIME = 5;
 
 export default function MonkeyMath() {
   // State variables
@@ -117,49 +117,36 @@ export default function MonkeyMath() {
 
   return (
     <div className="flex flex-grow w-full flex-col justify-center items-center text-zinc-200">
-      <div className="mb-2 flex items-center justify-center">
-        {/* Display the time left */}
+      <div className="mb-2 flex items-center">
         <div className="mb-6 text-center">
-          {/* <p className="mb-5 text-2xl">{problem}</p> */}
-          <p
-            className="text-x1 white"
-            style={{ visibility: timerStarted ? "visible" : "hidden" }}
-          >
+          <p className="text-6xl text-gray-400 pb-5" style={{ visibility: timerStarted ? "visible" : "hidden" }}>
             {timeLeft}
           </p>
         </div>
       </div>
-      <div className="flex flex-col items-center w-1/2 rounded-lg bg-zinc-700/30 p-6 shadow-lg">
+      
+      <div className="flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-zinc-700/30 shadow-lg">
         <div className="mb-6 text-center">
-          <p className="mb-5 text-2xl" hidden={timerEnded}>
+          <p className="mb-5 text-4xl" hidden={timerEnded}>
             {problem}
           </p>
           <p
-            className="text-center text-2xl white"
+            className="text-center text-3xl white pb-4"
             hidden={!timerEnded}
           >
-            Correct answers: {correctCount}
+            Incorrect : {totalCount - correctCount}
           </p>
           <p
-            className="text-center text-2xl white"
+            className="text-center text-3xl white"
             hidden={!timerEnded}
           >
-            Incorrect answers: {totalCount - correctCount}
-          </p>
-          <p
-            className="text-center text-2xl white"
-            hidden={!timerEnded}
-          >
-            {totalCount > 0
-              ? `${((correctCount / totalCount) * 100).toFixed(2)}%`
-              : "0%"}
+            Accuracy: {correctCount} out of {totalCount}
           </p>
         </div>
+
         <div className="flex justify-center">
           <form onSubmit={handleSubmit}>
-            <input
-              ref={inputRef}
-              value={userInput}
+            <input hidden={timerEnded} ref={inputRef} value={userInput}
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 if (!timerStarted) {
                   setTimerStarted(true);
@@ -167,11 +154,11 @@ export default function MonkeyMath() {
                 setUserInput(e.target.value);
               }}
               type="number"
-              className={`flash mb-4 w-80 rounded-md border-0 bg-zinc-600/20 p-2 text-center focus:outline-none focus:ring-4 focus:ring-zinc-400/20 ${isCorrect === true ? "animate-flash-green" : isCorrect === false ? "animate-flash-red" : ""}`}
+              className={`text-4xl flash w-80 rounded-md border-0 bg-zinc-600/20 p-3 text-center focus:outline-none focus:ring-4 focus:ring-zinc-400/20 ${isCorrect === true ? "animate-flash-green" : isCorrect === false ? "animate-flash-red" : ""}`}
               disabled={timerEnded}
             />
 
-            <div className="mb-6 flex justify-center space-x-10">
+            <div className="flex justify-center space-x-10">
               <button
                 type="button"
                 onClick={() => {
@@ -190,7 +177,7 @@ export default function MonkeyMath() {
                   }, 0.2);
                 }}
                 style={{ visibility: timerEnded ? "visible" : "hidden" }}
-                className="w-1/2 rounded bg-zinc-600/20 px-4 py-2 font-bold text-white hover:bg-opacity-30"
+                className="rounded bg-zinc-600/20 px-4 py-2 text-3xl text-white hover:bg-opacity-30"
               >
                 Attempt Again
               </button>
