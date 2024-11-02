@@ -125,7 +125,7 @@ export default function MonkeyMath() {
     <div className="flex flex-grow w-full flex-col justify-center items-center text-zinc-200">
       <div className="mb-6 flex items-center justify-center text-center">
         <p
-          className="timer-display text-6xl text-gray-400 pb-6"
+          className="timer-display text-7xl text-gray-400 pb-6"
           style={{ visibility: timerStarted ? "visible" : "hidden" }}
         >
           {timeLeft}
@@ -135,7 +135,7 @@ export default function MonkeyMath() {
       <div className="Box flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-zinc-700/30 shadow-lg">
         <div className="flex justify-center">
           <form onSubmit={handleSubmit}>
-            <p className="Problem mb-5 text-5xl pb-8 text-center" hidden={timerEnded}>
+            <p className="Problem text-5xl pb-8 text-center" hidden={timerEnded}>
               {problem}
             </p>
             <input
@@ -149,15 +149,15 @@ export default function MonkeyMath() {
                 setUserInput(e.target.value)
               }}
               type="number"
-              className={`text-4xl flash w-80 rounded-md border-0 bg-zinc-600/20 p-3 text-center focus:outline-none focus:ring-4 focus:ring-zinc-400/20 ${getAnimationClass()}`}
+              className={`text-5xl flash w-60 rounded-md border-0 bg-zinc-600/20 p-1 mb-5 text-center focus:outline-none focus:ring-4 focus:ring-zinc-400/20 ${getAnimationClass()}`}
               disabled={timerEnded}
             />
 
             <p className="text-center text-4xl white pb-8" hidden={!timerEnded}>
-              Incorrect : {totalCount - correctCount}
+              Correct: {correctCount} out of {totalCount}
             </p>
             <p className="text-center text-4xl white pb-8" hidden={!timerEnded}>
-              Accuracy: {correctCount} out of {totalCount}
+              Incorrect : {totalCount - correctCount} out of {totalCount}
             </p>
             <div className="flex justify-center space-x-10">
               <button
