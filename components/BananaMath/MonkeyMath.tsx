@@ -117,35 +117,19 @@ export default function MonkeyMath() {
 
   return (
     <div className="flex flex-grow w-full flex-col justify-center items-center text-zinc-200">
-      <div className="mb-2 flex items-center">
-        <div className="mb-6 text-center">
-          <p className="text-6xl text-gray-400 pb-5" style={{ visibility: timerStarted ? "visible" : "hidden" }}>
-            {timeLeft}
-          </p>
-        </div>
+      <div className="mb-6 flex items-center justify-center text-center">
+        <p className="timer-display text-6xl text-gray-400 pb-6" style={{ visibility: timerStarted ? "visible" : "hidden" }}>
+          {timeLeft}
+        </p>
       </div>
       
-      <div className="flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-zinc-700/30 shadow-lg">
-        <div className="mb-6 text-center">
-          <p className="mb-5 text-4xl" hidden={timerEnded}>
-            {problem}
-          </p>
-          <p
-            className="text-center text-3xl white pb-4"
-            hidden={!timerEnded}
-          >
-            Incorrect : {totalCount - correctCount}
-          </p>
-          <p
-            className="text-center text-3xl white"
-            hidden={!timerEnded}
-          >
-            Accuracy: {correctCount} out of {totalCount}
-          </p>
-        </div>
-
+      <div className="Box flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-zinc-700/30 shadow-lg">
+        
         <div className="flex justify-center">
           <form onSubmit={handleSubmit}>
+            <p className="Problem mb-5 text-5xl pb-8 text-center" hidden={timerEnded}>
+              {problem}
+            </p>
             <input hidden={timerEnded} ref={inputRef} value={userInput}
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 if (!timerStarted) {
@@ -158,6 +142,18 @@ export default function MonkeyMath() {
               disabled={timerEnded}
             />
 
+            <p
+              className="text-center text-4xl white pb-8"
+              hidden={!timerEnded}
+            >
+              Incorrect : {totalCount - correctCount}
+            </p>
+            <p
+              className="text-center text-4xl white pb-8"
+              hidden={!timerEnded}
+            >
+              Accuracy: {correctCount} out of {totalCount}
+            </p>
             <div className="flex justify-center space-x-10">
               <button
                 type="button"
@@ -176,12 +172,13 @@ export default function MonkeyMath() {
                     }
                   }, 0.2);
                 }}
-                style={{ visibility: timerEnded ? "visible" : "hidden" }}
-                className="rounded bg-zinc-600/20 px-4 py-2 text-3xl text-white hover:bg-opacity-30"
+                hidden={!timerEnded}
+                className="rounded bg-zinc-600/20 px-6 py-4 text-4xl text-white hover:bg-opacity-30"
               >
                 Attempt Again
               </button>
             </div>
+
           </form>
         </div>
       </div>
