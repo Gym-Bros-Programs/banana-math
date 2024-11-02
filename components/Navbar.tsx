@@ -1,7 +1,6 @@
 // components/Navbar.tsx
 import Image from "next/image"
 import Link from "next/link"
-import React from "react"
 
 import AuthButton from "./AuthButton"
 
@@ -11,13 +10,13 @@ const Navbar = ({ isSupabaseConnected }: { isSupabaseConnected: boolean }) => (
   <nav className="w-full flex items-center justify-between">
     <div className="flex items-center space-x-4">
       <Image
-        src="https://placehold.co/40x40"
+        src="https://placehold.co/69x69"
         alt="logo"
-        width={40}
-        height={40}
+        width={69}
+        height={69}
         className="size-10"
       />
-      <span className="text-xl font-bold">BananaMath</span>
+      <span className="text-xl font-bold">Numerify</span>
     </div>
     <div className="flex items-center space-x-4">
       <Link href="/attempts" className={TEXT_CLASS}>

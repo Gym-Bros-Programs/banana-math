@@ -42,19 +42,20 @@ export default function MonkeyMath() {
     }
 
     // Calculate the result based on the operator
+    // prettier-ignore
     switch (operator) {
-      case "+":
-        setResult(num1 + num2)
-        break
-      case "-":
-        setResult(num1 - num2)
-        break
-      case "*":
-        setResult(num1 * num2)
-        break
-      case "/":
-        setResult(num1 / num2)
-        break
+    case "+":
+      setResult(num1 + num2)
+      break
+    case "-":
+      setResult(num1 - num2)
+      break
+    case "*":
+      setResult(num1 * num2)
+      break
+    case "/":
+      setResult(num1 / num2)
+      break
     }
 
     // Set the problem and reset user input, message, and correctness status

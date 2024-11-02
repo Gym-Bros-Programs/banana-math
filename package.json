@@ -5,29 +5,39 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint:fix": "next lint --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "fix": "next lint --fix && prettier --write ."
+  },
+  "eslintConfig": {
+    "extends": "./config/eslint/.eslintrc.json"
+  },
+  "prettier": "./config/prettier/.prettierrc.json",
+  "frozen": {
+    "comment": "These versions are intentionally frozen and should not be updated without review",
+    "dependencies": {
+      "@supabase/ssr": "0.5.1",
+      "@supabase/supabase-js": "2.46.1",
+      "next": "14.1.3"
+    }
   },
   "dependencies": {
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
-    "autoprefixer": "10.4.17",
-    "geist": "^1.2.1",
-    "next": "14.2.7",
-    "postcss": "8.4.33",
-    "react": "18.2.0",
+    "@supabase/ssr": "0.5.1",
+    "@supabase/supabase-js": "2.46.1",
+    "autoprefixer": "10.4.20",
+    "geist": "^1.3.1",
+    "next": "14.2.16",
+    "postcss": "8.4.47",
+    "react": "18.3.1",
     "react-dom": "18.2.0",
-    "tailwindcss": "3.4.1",
-    "typescript": "5.3.3"
+    "tailwindcss": "3.4.14",
+    "typescript": "5.6.3"
   },
   "devDependencies": {
-    "@types/node": "20.11.5",
-    "@types/react": "18.2.48",
-    "@types/react-dom": "18.2.18",
+    "@types/node": "22.8.6",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
     "encoding": "^0.1.13",
-    "eslint": "^8.0.0",
-    "eslint-config-next": "^15.0.2",
+    "eslint": "8.57.1",
+    "eslint-config-next": "^14.1.3",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3"
   }
