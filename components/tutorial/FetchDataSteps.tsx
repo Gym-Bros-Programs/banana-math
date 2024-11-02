@@ -1,5 +1,5 @@
-import Step from "./Step";
-import Code from "./Code";
+import Code from "./Code"
+import Step from "./Step"
 
 const create = `
 create table notes (
@@ -12,7 +12,7 @@ values
   ('Today I created a Supabase project.'),
   ('I added some data and queried it from Next.js.'),
   ('It was awesome!');
-`.trim();
+`.trim()
 
 const server = `
 import { createClient } from '@/utils/supabase/server'
@@ -23,7 +23,7 @@ export default async function Page() {
 
   return <pre>{JSON.stringify(notes, null, 2)}</pre>
 }
-`.trim();
+`.trim()
 
 const client = `
 'use client'
@@ -45,7 +45,7 @@ export default function Page() {
 
   return <pre>{JSON.stringify(notes, null, 2)}</pre>
 }
-`.trim();
+`.trim()
 
 export default function FetchDataSteps() {
   return (
@@ -61,9 +61,8 @@ export default function FetchDataSteps() {
           >
             Table Editor
           </a>{" "}
-          for your Supabase project to create a table and insert some example
-          data. If you're stuck for creativity, you can copy and paste the
-          following into the{" "}
+          for your Supabase project to create a table and insert some example data. If you&aposre
+          stuck for creativity, you can copy and paste the following into the{" "}
           <a
             href="https://supabase.com/dashboard/project/_/sql/new"
             className="font-bold hover:underline text-foreground/80"
@@ -79,8 +78,8 @@ export default function FetchDataSteps() {
 
       <Step title="Query Supabase data from Next.js">
         <p>
-          To create a Supabase client and query data from an Async Server
-          Component, create a new page.tsx file at{" "}
+          To create a Supabase client and query data from an Async Server Component, create a new
+          page.tsx file at{" "}
           <span className="px-2 py-1 rounded-md bg-foreground/20 text-foreground/80">
             /app/notes/page.tsx
           </span>{" "}
@@ -92,8 +91,8 @@ export default function FetchDataSteps() {
       </Step>
 
       <Step title="Build in a weekend and scale to millions!">
-        <p>You're ready to launch your product to the world! 🚀</p>
+        <p>You&aposre ready to launch your product to the world! 🚀</p>
       </Step>
     </ol>
-  );
+  )
 }

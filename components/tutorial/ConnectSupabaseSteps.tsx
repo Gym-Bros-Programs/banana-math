@@ -1,4 +1,4 @@
-import Step from "./Step";
+import Step from "./Step"
 
 export default function ConnectSupabaseSteps() {
   return (
@@ -35,7 +35,7 @@ export default function ConnectSupabaseSteps() {
             className="font-bold hover:underline text-foreground/80"
             rel="noreferrer"
           >
-            your Supabase project's API Settings
+            your Supabase project&aposs API Settings
           </a>
           .
         </p>
@@ -52,11 +52,8 @@ export default function ConnectSupabaseSteps() {
       </Step>
 
       <Step title="Refresh the page">
-        <p>
-          You may need to refresh the page for Next.js to load the new
-          environment variables.
-        </p>
+        <p>You may need to refresh the page for Next.js to load the new environment variables.</p>
       </Step>
     </ol>
-  );
+  )
 }

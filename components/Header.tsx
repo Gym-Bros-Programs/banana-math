@@ -1,5 +1,5 @@
-import NextLogo from "./NextLogo";
-import SupabaseLogo from "./SupabaseLogo";
+import NextLogo from "./NextLogo"
+import SupabaseLogo from "./SupabaseLogo"
 
 export default function Header() {
   return (
@@ -40,5 +40,5 @@ export default function Header() {
       </p>
       <div className="w-full p-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent my-8" />
     </div>
-  );
+  )
 }
