@@ -44,6 +44,8 @@ jobs:
       - run: npm test --if-present
 
   security:
+    # Only run if the repository is the org repo
+    if: github.repository == 'Gym-Bros-Programs/banana-math'
     needs: [build]
     runs-on: ubuntu-latest
     steps:

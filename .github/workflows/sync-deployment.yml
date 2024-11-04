@@ -7,13 +7,14 @@ on:
 
 jobs:
   sync:
+    # Only run if the repository is the org repo
+    if: github.repository == 'Gym-Bros-Programs/banana-math'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Use PAT instead of GITHUB_TOKEN for checkout
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Configure Git
@@ -25,6 +26,5 @@ jobs:
         env:
           PERSONAL_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          # Use HTTPS URL with embedded token
           git remote add destination "https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/Micsushi/banana-math-deployment.git"
           git push destination main:main --force
