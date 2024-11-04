@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -12,11 +13,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Use PAT instead of GITHUB_TOKEN for checkout
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
 
       - name: Push to private fork
         env:
-          SOURCE_REPO: "https://${{ secrets.GITHUB_TOKEN }}@github.com/Gym-Bros-Programs/banana-math.git"
-          DESTINATION_REPO: "https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/Micsushi/banana-math-deployment.git"
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
-          git remote add destination $DESTINATION_REPO
+          # Use HTTPS URL with embedded token
+          git remote add destination "https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/Micsushi/banana-math-deployment.git"
           git push destination main:main --force
