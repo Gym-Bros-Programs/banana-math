@@ -1,38 +1,22 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
+"use client"
 
-import { createClient } from "@/utils/supabase/server"
+import { useState } from "react"
 
-export default async function AuthButton() {
-  const supabase = createClient()
+import LoginModal from "@/components/auth/login-modal"
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+export default function AuthButton() {
+  const [showLogin, setShowLogin] = useState(false)
 
-  const signOut = async () => {
-    "use server"
+  return (
+    <>
+      <button
+        onClick={() => setShowLogin(true)}
+        className="bg-green-700 hover:bg-green-600 rounded-md px-4 py-2 text-white"
+      >
+        Login
+      </button>
 
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    return redirect("/")
-  }
-
-  return user ? (
-    <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOut}>
-        <button className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover">
-          Logout
-        </button>
-      </form>
-    </div>
-  ) : (
-    <Link
-      href="/login"
-      className="py-2 px-3 flex rounded-md no-underline bg-btn-background hover:bg-btn-background-hover"
-    >
-      Login
-    </Link>
+      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
+    </>
   )
 }
