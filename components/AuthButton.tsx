@@ -20,8 +20,8 @@ export default function AuthButton({ session }: { session: any }) {
   if (session?.user) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-sm text-zinc-200">Hello, {session.user.email}</span>
-        <button onClick={handleSignOut} className="text-sm text-zinc-400 hover:text-zinc-200">
+        <span className="text-xl font-bold text-zinc-300">{session.user.user_metadata?.display_name || session.user.email}</span>
+        <button onClick={handleSignOut} className=" bg-red-900 rounded-md text-l px-5 py-2 text-white font-semibold">
           Logout
         </button>
       </div>

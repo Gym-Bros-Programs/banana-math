@@ -21,7 +21,7 @@ export default async function Navbar({ isSupabaseConnected }: { isSupabaseConnec
         />
         <span className="text-2xl font-bold">Numerify</span>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center">
         <Link href="/attempts" className={TEXT_CLASS}>
           Attempts
         </Link>
