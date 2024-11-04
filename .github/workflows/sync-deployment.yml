@@ -1,0 +1,22 @@
+name: Sync Fork with Main Repo
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to private fork
+        env:
+          SOURCE_REPO: "https://${{ secrets.GITHUB_TOKEN }}@github.com/Gym-Bros-Programs/banana-math.git"
+          DESTINATION_REPO: "https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/your-username/private-fork.git"
+        run: |
+          git remote add destination $DESTINATION_REPO
+          git push destination main:main --force

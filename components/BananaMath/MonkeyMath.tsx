@@ -124,9 +124,9 @@ export default function MonkeyMath() {
 
   return (
     <div className="flex flex-grow w-full flex-col justify-center items-center text-zinc-200">
-      <div className="mb-6 flex items-center justify-center text-center">
+      <div className="mb-4 flex items-center justify-center text-center">
         <p
-          className="timer-display text-7xl text-gray-400 pb-6"
+          className="timer-display text-4xl text-gray-400"
           style={{ visibility: timerStarted ? "visible" : "hidden" }}
         >
           {timeLeft}
@@ -136,7 +136,7 @@ export default function MonkeyMath() {
       <div className="Box flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-zinc-700/30 shadow-lg">
         <div className="flex justify-center">
           <form onSubmit={handleSubmit}>
-            <p className="Problem text-5xl pb-8 text-center" hidden={timerEnded}>
+            <p className="Problem text-7xl pb-14 text-center" hidden={timerEnded}>
               {problem}
             </p>
             <input
