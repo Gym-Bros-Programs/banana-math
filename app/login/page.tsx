@@ -34,6 +34,28 @@ export default function Login({ searchParams }: { searchParams: { message: strin
     const password = formData.get("password") as string
     const supabase = createClient()
 
+    // Validate password
+    const messages = []
+    if (password.length < 8) {
+      messages.push("Password must be at least 8 characters")
+    }
+    if (!/[a-z]/.test(password)) {
+      messages.push("Password must contain a lowercase letter")
+    }
+    if (!/[A-Z]/.test(password)) {
+      messages.push("Password must contain an uppercase letter")
+    }
+    if (!/[0-9]/.test(password)) {
+      messages.push("Password must contain a number")
+    }
+    if (!/[!@#$%^&*]/.test(password)) {
+      messages.push("Password must contain a special character")
+    }
+    if (messages.length > 0) {
+      const message = messages.join(", ")
+      redirect(`/login?message=${encodeURIComponent(message)}`)
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
