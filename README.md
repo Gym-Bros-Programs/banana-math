@@ -19,6 +19,7 @@ Stage 5: Ads and Subscription for upkeep cost, launch site!
 Have a look at the .env.sample file and follow the steps in the link to create a .env.local
 
 Local compiling
+
 ```
 brew install npm
 npm install next
@@ -26,6 +27,7 @@ npm run dev
 ```
 
 Local compiling using docker
+
 ```
 docker build . -t banana-math
 docker run -d -p 3000:3000 banana-math

@@ -20,8 +20,14 @@ export default function AuthButton({ session }: { session: any }) {
   if (session?.user) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-xl font-bold text-zinc-300">{session.user.user_metadata?.display_name || session.user.email}</span>
-        <button onClick={handleSignOut} className=" bg-red-900 rounded-md text-l px-5 py-2 text-white font-semibold">
+        {/*TODO add image and manage profile */}
+        <span className="ml-3 text-xl font-bold text-zinc-300">
+          {session.user.user_metadata?.display_name || session.user.email}
+        </span>
+        <button
+          onClick={handleSignOut}
+          className=" bg-red-900 rounded-md text-l px-5 py-2 text-white font-semibold"
+        >
           Logout
         </button>
       </div>
@@ -32,7 +38,7 @@ export default function AuthButton({ session }: { session: any }) {
     <>
       <button
         onClick={() => setShowLogin(true)}
-        className="bg-green-800 hover:bg-green-700 rounded-md px-5 py-2 text-white font-semibold"
+        className="bg-green-800 hover:bg-green-700 rounded-md ml-2 px-5 py-2 text-white font-semibold"
       >
         Login
       </button>

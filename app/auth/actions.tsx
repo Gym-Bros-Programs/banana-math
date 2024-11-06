@@ -136,8 +136,7 @@ export async function signUp(formData: FormData) {
 
     if (profileError) {
       return {
-        error:
-          "You have already made an account with this email."
+        error: "You have already made an account with this email."
       }
     }
 
