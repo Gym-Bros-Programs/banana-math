@@ -1,38 +1,50 @@
-import Link from "next/link"
-import { redirect } from "next/navigation"
+"use client"
 
-import { createClient } from "@/utils/supabase/server"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
-export default async function AuthButton() {
-  const supabase = createClient()
+import { createClient } from "@/utils/supabase/client"
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
+import LoginModal from "./auth/login-modal"
 
-  const signOut = async () => {
-    "use server"
+export default function AuthButton({ session }: { session: any }) {
+  const [showLogin, setShowLogin] = useState(false)
+  const router = useRouter()
 
+  const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    return redirect("/")
+    router.refresh()
   }
 
-  return user ? (
-    <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOut}>
-        <button className="py-2 px-4 rounded-md no-underline bg-btn-background hover:bg-btn-background-hover">
+  if (session?.user) {
+    return (
+      <div className="flex items-center gap-4">
+        <span className="text-xl font-bold text-zinc-300">{session.user.user_metadata?.display_name || session.user.email}</span>
+        <button onClick={handleSignOut} className=" bg-red-900 rounded-md text-l px-5 py-2 text-white font-semibold">
           Logout
         </button>
-      </form>
-    </div>
-  ) : (
-    <Link
-      href="/login"
-      className="py-2 px-3 flex rounded-md no-underline bg-btn-background hover:bg-btn-background-hover"
-    >
-      Login
-    </Link>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setShowLogin(true)}
+        className="bg-green-800 hover:bg-green-700 rounded-md px-5 py-2 text-white font-semibold"
+      >
+        Login
+      </button>
+
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSuccess={() => {
+          setShowLogin(false)
+          router.refresh()
+        }}
+      />
+    </>
   )
 }
