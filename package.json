@@ -14,13 +14,13 @@
   "frozen": {
     "comment": "These versions are intentionally frozen and should not be updated without review",
     "dependencies": {
-      "@supabase/ssr": "0.5.1",
+      "@supabase/ssr": "0.5.2",
       "@supabase/supabase-js": "2.46.1",
       "next": "14.1.3"
     }
   },
   "dependencies": {
-    "@supabase/ssr": "0.5.1",
+    "@supabase/ssr": "0.5.2",
     "@supabase/supabase-js": "2.46.1",
     "autoprefixer": "10.4.20",
     "geist": "^1.3.1",
