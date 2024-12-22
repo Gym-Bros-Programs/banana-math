@@ -15,7 +15,7 @@
     "comment": "These versions are intentionally frozen and should not be updated without review",
     "dependencies": {
       "@supabase/ssr": "0.5.1",
-      "@supabase/supabase-js": "2.46.1",
+      "@supabase/supabase-js": "2.46.2",
       "next": "14.1.3"
     }
   },
