@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from "react"
 
 import addAttempt from "@/app/server-actions/addAttempt"
 
+import TimerSelector from "../TimeSelector"
+
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -23,6 +25,7 @@ export default function MonkeyMath() {
   const [_message, setMessage] = useState<string>("")
   const [result, setResult] = useState<number | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [selectedTime, setSelectedTime] = useState<number>(COUNT_DOWN_TIME)
   const [timerEnded, setTimerEnded] = useState<boolean>(false)
   const [timeLeft, setTimeLeft] = useState<number>(COUNT_DOWN_TIME)
   const [timerStarted, setTimerStarted] = useState<boolean>(false)
@@ -123,7 +126,27 @@ export default function MonkeyMath() {
   }
 
   return (
-    <div className="flex flex-grow w-full flex-col justify-center items-center text-zinc-200">
+    <div className="flex flex-col items-center justify-center w-full text-zinc-200">
+      <TimerSelector
+        options={[15, 30, 60, 120]}
+        selected={selectedTime}
+        onSelect={(time) => {
+          setSelectedTime(time)
+          setTimeLeft(time)
+          setTimerStarted(false)
+          setTimerEnded(false)
+          setCorrectCount(0)
+          setTotalCount(0)
+          promptMathProblem()
+          setTimeout(() => {
+            if (inputRef.current) {
+              (inputRef.current as HTMLInputElement).focus()
+            }
+          }, 100)
+        }}
+      />
+
+      {/* Timer */}
       <div className="mb-4 flex items-center justify-center text-center">
         <p
           className="timer-display text-4xl text-gray-400"
