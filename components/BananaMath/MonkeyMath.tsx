@@ -14,7 +14,7 @@ function getRandomNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-const COUNT_DOWN_TIME = 5
+const COUNT_DOWN_TIME = 15
 
 export default function MonkeyMath() {
   // State variables
