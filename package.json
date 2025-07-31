@@ -15,16 +15,16 @@
     "comment": "These versions are intentionally frozen and should not be updated without review",
     "dependencies": {
       "@supabase/ssr": "0.5.2",
-      "@supabase/supabase-js": "2.46.1",
+      "@supabase/supabase-js": "2.53.0",
       "next": "15.2.2"
     }
   },
   "dependencies": {
     "@supabase/ssr": "0.5.2",
-    "@supabase/supabase-js": "2.46.1",
+    "@supabase/supabase-js": "2.53.0",
     "autoprefixer": "10.4.20",
     "geist": "^1.3.1",
-    "next": "14.2.16",
+    "next": "15.2.4",
     "postcss": "8.4.47",
     "react": "18.3.1",
     "react-dom": "18.2.0",
