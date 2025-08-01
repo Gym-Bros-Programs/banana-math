@@ -2,16 +2,9 @@
 import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 
+import ControlBar from "@/components/ControlBar"
+import type { Mode } from "@/components/ControlBar"
 import { createAttempt, addUserAnswer, finishAttempt } from "@/lib/actions/game-actions"
-import {
-  COUNT_DOWN_TIME,
-  RANDOM_NUMBER_MIN,
-  RANDOM_NUMBER_MAX,
-  OPERATORS,
-  type Operator
-} from "@/lib/constants/game"
-
-import ControlBar from "../ControlBar"
 
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
@@ -19,6 +12,10 @@ function getRandomNumber(min: number, max: number): number {
 }
 
 const COUNT_DOWN_TIME = 15
+const RANDOM_NUMBER_MIN = 1
+const RANDOM_NUMBER_MAX = 10
+const OPERATORS = ["+", "-", "*", "/"] as const
+type Operator = (typeof OPERATORS)[number]
 
 export default function MonkeyMath() {
   // State variables
@@ -101,6 +98,10 @@ export default function MonkeyMath() {
       setIsSubmitting(false)
     }, 300)
   }
+
+  useEffect(() => {
+    setTimeLeft(selectedTime)
+  }, [selectedTime])
 
   // Populate the first problem on mount
   useEffect(() => {

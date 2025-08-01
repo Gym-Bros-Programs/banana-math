@@ -10,11 +10,11 @@ export async function createAttempt() {
     data: { user }
   } = await supabase.auth.getUser()
 
-  if (!user) throw new Error("User not authenticated")
+  const userId = user ? user.id : null
 
   const { data, error } = await supabase
     .from("attempts")
-    .insert({ user_id: user.id })
+    .insert({ user_id: userId })
     .select("id")
     .single()
 
@@ -25,24 +25,18 @@ export async function createAttempt() {
   return data.id
 }
 
-// This is the updated payload type
 export async function addUserAnswer(payload: {
   attemptId: string
-  questionId: string | null // Changed from questionText
+  questionId: string | null
   submittedAnswer: string
   isCorrect: boolean
 }) {
   const { attemptId, questionId, submittedAnswer, isCorrect } = payload
   const supabase = createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error("User not authenticated")
 
   const { error } = await supabase.from("user_answers").insert({
     attempt_id: attemptId,
-    question_id: questionId, // Use the passed ID
+    question_id: questionId,
     submitted_answer: submittedAnswer,
     is_correct: isCorrect
   })
@@ -59,11 +53,6 @@ export async function finishAttempt(payload: {
 }) {
   const { attemptId, correctCount, totalCount } = payload
   const supabase = createClient()
-  const {
-    data: { user }
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error("User not authenticated")
 
   const percentage = totalCount > 0 ? (correctCount / totalCount) * 100 : 0
 
