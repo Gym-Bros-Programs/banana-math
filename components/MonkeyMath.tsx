@@ -2,14 +2,13 @@
 import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 
-import { createAttempt, addUserAnswer, finishAttempt } from "@/app/server-actions/game-actions"
+import { createAttempt, addUserAnswer, finishAttempt } from "@/lib/actions/game-actions"
+import { COUNT_DOWN_TIME, RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX, OPERATORS, type Operator } from "@/lib/constants/game"
 
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
-
-const COUNT_DOWN_TIME = 5
 
 export default function MonkeyMath() {
   // State variables
@@ -31,9 +30,9 @@ export default function MonkeyMath() {
 
   // Function to prompt the user with a math problem
   function promptMathProblem() {
-    let num1 = getRandomNumber(1, 10)
-    const num2 = getRandomNumber(1, 10)
-    const operator = ["+", "-", "*", "/"][getRandomNumber(0, 3)]
+    let num1 = getRandomNumber(RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX)
+    const num2 = getRandomNumber(RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX)
+    const operator = OPERATORS[getRandomNumber(0, OPERATORS.length - 1)] as Operator
 
     if (operator === "/") {
       num1 = num2 * getRandomNumber(1, 10)

@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer"
 import MonkeyMath from "@/components/MonkeyMath"
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 
 import Navbar from "../components/Navbar"
 
