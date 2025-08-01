@@ -5,7 +5,11 @@ import AuthButton from "./AuthButton"
 
 const TEXT_CLASS = "text-zinc-400 hover:text-zinc-200 transition-colors text-l p-2"
 
-export default function Navbar() {
+type NavbarProps = {
+  isSupabaseConnected: boolean
+}
+
+export default function Navbar({ isSupabaseConnected }: NavbarProps) {
   return (
     <nav className="w-full flex items-center justify-between p-4 border-b border-zinc-800">
       <div className="flex items-center space-x-4">
@@ -17,6 +21,10 @@ export default function Navbar() {
           className="rounded-lg"
         />
         <span className="text-2xl font-bold text-white">Numerify</span>
+        <div
+          className={`w-3 h-3 rounded-full ${isSupabaseConnected ? "bg-green-500" : "bg-red-500"}`}
+          title={isSupabaseConnected ? "Supabase Connected" : "Supabase Connection Failed"}
+        />
       </div>
       <div className="flex items-center">
         <Link href="/protected" className={TEXT_CLASS}>
@@ -28,7 +36,6 @@ export default function Navbar() {
         <Link href="/leaderboard" className={TEXT_CLASS}>
           Leaderboard
         </Link>
-        {/* The AuthButton now handles all logic internally */}
         <AuthButton />
       </div>
     </nav>
