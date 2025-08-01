@@ -3,7 +3,13 @@ import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 
 import { createAttempt, addUserAnswer, finishAttempt } from "@/lib/actions/game-actions"
-import { COUNT_DOWN_TIME, RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX, OPERATORS, type Operator } from "@/lib/constants/game"
+import {
+  COUNT_DOWN_TIME,
+  RANDOM_NUMBER_MIN,
+  RANDOM_NUMBER_MAX,
+  OPERATORS,
+  type Operator
+} from "@/lib/constants/game"
 
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
