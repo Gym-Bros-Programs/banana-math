@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react"
 
 import addAttempt from "@/app/server-actions/addAttempt"
 
-import TimerSelector from "../TimeSelector"
+import ControlBar from "../ControlBar"
 
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
@@ -31,6 +31,7 @@ export default function MonkeyMath() {
   const [timerStarted, setTimerStarted] = useState<boolean>(false)
   const [correctCount, setCorrectCount] = useState<number>(0)
   const [totalCount, setTotalCount] = useState<number>(0)
+  const [selectedMode, setSelectedMode] = useState<Mode>("Arithmetic")
   const inputRef = useRef(null)
 
   // Function to prompt the user with a math problem
@@ -127,23 +128,11 @@ export default function MonkeyMath() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full text-zinc-200">
-      <TimerSelector
-        options={[15, 30, 60, 120]}
-        selected={selectedTime}
-        onSelect={(time) => {
-          setSelectedTime(time)
-          setTimeLeft(time)
-          setTimerStarted(false)
-          setTimerEnded(false)
-          setCorrectCount(0)
-          setTotalCount(0)
-          promptMathProblem()
-          setTimeout(() => {
-            if (inputRef.current) {
-              (inputRef.current as HTMLInputElement).focus()
-            }
-          }, 100)
-        }}
+      <ControlBar
+        selectedMode={selectedMode}
+        onModeChange={setSelectedMode}
+        selectedTime={selectedTime}
+        onTimeChange={setSelectedTime}
       />
 
       {/* Timer */}
