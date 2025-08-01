@@ -2,34 +2,41 @@ import Image from "next/image"
 import Link from "next/link"
 
 import AuthButton from "./AuthButton"
-import { getSession } from "./auth/auth-utils"
 
 const TEXT_CLASS = "text-zinc-400 hover:text-zinc-200 transition-colors text-l p-2"
 
-export default async function Navbar({ isSupabaseConnected }: { isSupabaseConnected: boolean }) {
-  const session = await getSession()
+type NavbarProps = {
+  isSupabaseConnected: boolean
+}
 
+export default function Navbar({ isSupabaseConnected }: NavbarProps) {
   return (
-    <nav className="w-full flex items-center justify-between">
+    <nav className="w-full flex items-center justify-between p-4 border-b border-zinc-800">
       <div className="flex items-center space-x-4">
         <Image
-          src="https://placehold.co/69x69"
+          src="https://placehold.co/69x69/18181b/ffffff?text=N"
           alt="logo"
-          width={69}
-          height={69}
-          className="size-10"
+          width={40}
+          height={40}
+          className="rounded-lg"
         />
-        <span className="text-2xl font-bold">Numerify</span>
+        <span className="text-2xl font-bold text-white">Numerify</span>
+        <div
+          className={`w-3 h-3 rounded-full ${isSupabaseConnected ? "bg-green-500" : "bg-red-500"}`}
+          title={isSupabaseConnected ? "Supabase Connected" : "Supabase Connection Failed"}
+        />
       </div>
       <div className="flex items-center">
+        <Link href="/protected" className={TEXT_CLASS}>
+          Game
+        </Link>
         <Link href="/attempts" className={TEXT_CLASS}>
-          Attempts
+          My Attempts
         </Link>
         <Link href="/leaderboard" className={TEXT_CLASS}>
           Leaderboard
         </Link>
-        <button className={TEXT_CLASS}>Settings</button>
-        {isSupabaseConnected && <AuthButton session={session} />}
+        <AuthButton />
       </div>
     </nav>
   )

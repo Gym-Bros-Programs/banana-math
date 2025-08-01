@@ -1,6 +1,6 @@
-import MonkeyMath from "@/components/BananaMath/MonkeyMath"
 import Footer from "@/components/Footer"
-import { createClient } from "@/utils/supabase/server"
+import MonkeyMath from "@/components/MonkeyMath"
+import { createClient } from "@/lib/supabase/server"
 
 import Navbar from "../components/Navbar"
 
@@ -9,7 +9,7 @@ export default async function Index() {
     try {
       createClient()
       return true
-    } catch (e) {
+    } catch (_e) {
       return false
     }
   }

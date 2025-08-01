@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 
-import { createClient } from "@/utils/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function AttemptHistory() {
   const supabase = createClient()
@@ -15,7 +15,7 @@ export default async function AttemptHistory() {
     return redirect("/login")
   }
 
-  const { data: entries, error: _error } = await supabase
+  const { data: entries } = await supabase
     .from("entries")
     .select("*")
     .eq("user_id", user?.id)

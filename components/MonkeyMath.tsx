@@ -1,15 +1,10 @@
-/**
- * MonkeyMath component for generating math problems and checking user answers.
- *
- * @returns The MonkeyMath component.
- */
 "use client"
 import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 
-import addAttempt from "@/app/server-actions/addAttempt"
-
-import ControlBar from "../ControlBar"
+import ControlBar from "@/components/ControlBar"
+import type { Mode } from "@/components/ControlBar"
+import { createAttempt, addUserAnswer, finishAttempt } from "@/lib/actions/game-actions"
 
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
@@ -17,12 +12,16 @@ function getRandomNumber(min: number, max: number): number {
 }
 
 const COUNT_DOWN_TIME = 15
+const RANDOM_NUMBER_MIN = 1
+const RANDOM_NUMBER_MAX = 10
+const OPERATORS = ["+", "-", "*", "/"] as const
+type Operator = (typeof OPERATORS)[number]
 
 export default function MonkeyMath() {
   // State variables
   const [problem, setProblem] = useState<string>("")
   const [userInput, setUserInput] = useState<string>("")
-  const [_message, setMessage] = useState<string>("")
+  const [, setMessage] = useState<string>("")
   const [result, setResult] = useState<number | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [selectedTime, setSelectedTime] = useState<number>(COUNT_DOWN_TIME)
@@ -34,96 +33,134 @@ export default function MonkeyMath() {
   const [selectedMode, setSelectedMode] = useState<Mode>("Arithmetic")
   const inputRef = useRef(null)
 
+  // NEW STATE: To store the ID of the current attempt session
+  const [attemptId, setAttemptId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
   // Function to prompt the user with a math problem
   function promptMathProblem() {
-    let num1 = getRandomNumber(1, 10)
-    const num2 = getRandomNumber(1, 10)
-    const operator = ["+", "-", "*", "/"][getRandomNumber(0, 3)]
+    let num1 = getRandomNumber(RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX)
+    const num2 = getRandomNumber(RANDOM_NUMBER_MIN, RANDOM_NUMBER_MAX)
+    const operator = OPERATORS[getRandomNumber(0, OPERATORS.length - 1)] as Operator
 
-    // If the operator is '/', adjust num1 and num2 to ensure the result is a whole number
     if (operator === "/") {
       num1 = num2 * getRandomNumber(1, 10)
     }
 
-    // Calculate the result based on the operator
     // prettier-ignore
     switch (operator) {
-    case "+":
-      setResult(num1 + num2)
-      break
-    case "-":
-      setResult(num1 - num2)
-      break
-    case "*":
-      setResult(num1 * num2)
-      break
-    case "/":
-      setResult(num1 / num2)
-      break
+      case "+": setResult(num1 + num2); break;
+      case "-": setResult(num1 - num2); break;
+      case "*": setResult(num1 * num2); break;
+      case "/": setResult(num1 / num2); break;
     }
 
-    // Set the problem and reset user input, message, and correctness status
     setProblem(`${num1} ${operator} ${num2}`)
     setUserInput("")
     setMessage("")
     setIsCorrect(null)
   }
 
-  // Function to check the user's answer
-  function checkAnswer() {
+  async function checkAnswer() {
     const userAnswer = parseFloat(userInput)
-    if (userAnswer === result) {
+    const wasCorrect = userAnswer === result
+
+    setIsCorrect(wasCorrect)
+    setTotalCount((prev) => prev + 1)
+
+    if (wasCorrect) {
       setMessage("Correct!")
-      setIsCorrect(true)
-      setCorrectCount(correctCount + 1)
-      setTotalCount(totalCount + 1)
+      setCorrectCount((prev) => prev + 1)
     } else {
       setMessage(`Incorrect! The correct answer is ${result}.`)
-      setIsCorrect(false)
-      setTotalCount(totalCount + 1)
+    }
+
+    // Call the server action to log the answer
+    if (attemptId) {
+      await addUserAnswer({
+        attemptId,
+        questionId: null,
+        submittedAnswer: userInput,
+        isCorrect: wasCorrect
+      })
     }
   }
 
-  // Function to handle form submission
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    checkAnswer()
-    setTimeout(promptMathProblem, 300) // Wait 0.3 s before prompting a new problem
+    if (isSubmitting || !userInput) return
+    setIsSubmitting(true)
+
+    await checkAnswer()
+
+    setTimeout(() => {
+      promptMathProblem()
+      setIsSubmitting(false)
+    }, 300)
   }
 
-  // Populate the first problem when the component mounts
+  useEffect(() => {
+    setTimeLeft(selectedTime)
+  }, [selectedTime])
+
+  // Populate the first problem on mount
   useEffect(() => {
     promptMathProblem()
   }, [])
 
-  // Update the timer every second once it has started
+  // MODIFIED: This effect now handles starting and finishing the attempt
   useEffect(() => {
-    // Focus the input field when the component mounts
     if (inputRef.current && timeLeft > 0) {
       ;(inputRef.current as unknown as HTMLInputElement).focus()
     }
 
-    // Start the countdown timer
+    // When the timer starts, create a new attempt in the database
+    if (timerStarted && !attemptId) {
+      createAttempt()
+        .then(setAttemptId)
+        .catch((err) => {
+          console.error("Failed to create attempt:", err)
+          // Optionally, show an error message to the user
+        })
+    }
+
+    let timer: NodeJS.Timeout
     if (timerStarted && timeLeft > 0) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1)
-      }, 1000) // Decrease the time left every second
-
-      // Clean up the timer when the component unmounts
-      return () => clearTimeout(timer)
+      }, 1000)
     }
 
-    // End the timer when timeLeft reaches 0
-    if (timeLeft === 0) {
+    // When the timer ends, finalize the attempt
+    if (timeLeft === 0 && !timerEnded) {
       setTimerEnded(true)
-      addAttempt(correctCount, totalCount)
+      if (attemptId) {
+        finishAttempt({ attemptId, correctCount, totalCount }).catch(console.error)
+      }
     }
-  }, [timerStarted, timeLeft, correctCount, totalCount])
+
+    return () => clearTimeout(timer)
+  }, [timerStarted, timeLeft, attemptId, correctCount, totalCount, timerEnded])
 
   function getAnimationClass() {
     if (isCorrect === true) return "animate-flash-green"
     if (isCorrect === false) return "animate-flash-red"
     return ""
+  }
+
+  const handleAttemptAgain = () => {
+    promptMathProblem()
+    setTimerStarted(false)
+    setTimeLeft(COUNT_DOWN_TIME)
+    setTimerEnded(false)
+    setCorrectCount(0)
+    setTotalCount(0)
+    setAttemptId(null)
+    setTimeout(() => {
+      if (inputRef.current) {
+        ;(inputRef.current as unknown as HTMLInputElement).focus()
+      }
+    }, 100)
   }
 
   return (
@@ -175,19 +212,7 @@ export default function MonkeyMath() {
             <div className="flex justify-center space-x-10">
               <button
                 type="button"
-                onClick={() => {
-                  promptMathProblem()
-                  setTimerStarted(false)
-                  setTimeLeft(COUNT_DOWN_TIME)
-                  setTimerEnded(false)
-                  setCorrectCount(0)
-                  setTotalCount(0)
-                  setTimeout(() => {
-                    if (inputRef.current) {
-                      ;(inputRef.current as unknown as HTMLInputElement).focus()
-                    }
-                  }, 0.2)
-                }}
+                onClick={handleAttemptAgain}
                 hidden={!timerEnded}
                 className="rounded bg-zinc-600/20 px-6 py-4 text-4xl text-white hover:bg-opacity-30"
               >

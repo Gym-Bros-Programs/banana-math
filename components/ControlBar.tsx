@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 
-type Mode = "Arithmetic" | "Geometry" | "Algebra" | "Trigonometry"
+export type Mode = "Arithmetic" | "Geometry" | "Algebra" | "Trigonometry"
 
 type ControlBarProps = {
   selectedMode: Mode
@@ -28,9 +28,7 @@ export default function ControlBar({
             key={mode}
             onClick={() => onModeChange(mode)}
             className={`flex items-center gap-1 px-3 py-1.5 text-2xl rounded-full transition-all duration-150 ${
-              selectedMode === mode
-                ? "text-green-400"
-                : "hover:text-zinc-200"
+              selectedMode === mode ? "text-green-400" : "hover:text-zinc-200"
             }`}
           >
             {getIcon(mode)}
@@ -49,9 +47,7 @@ export default function ControlBar({
             key={time}
             onClick={() => onTimeChange(time)}
             className={`px-3 py-1.5 text-2xl rounded-full transition-all duration-150 ${
-              selectedTime === time
-                ? "text-green-400"
-                : "hover:text-zinc-200"
+              selectedTime === time ? "text-green-400" : "hover:text-zinc-200"
             }`}
           >
             {time}
@@ -64,17 +60,17 @@ export default function ControlBar({
 
 function getIcon(mode: string) {
   switch (mode) {
-  case "time":
-    return <span>⏱</span>
-  case "quote":
-    return <span>❝</span>
-  case "zen":
-    return <span>🔺</span>
-  case "custom":
-    return <span>🛠</span>
-  case "words":
-    return <span className="font-bold">A</span>
-  default:
-    return null
+    case "time":
+      return <span>⏱</span>
+    case "quote":
+      return <span>❝</span>
+    case "zen":
+      return <span>🔺</span>
+    case "custom":
+      return <span>🛠</span>
+    case "words":
+      return <span className="font-bold">A</span>
+    default:
+      return null
   }
 }
