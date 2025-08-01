@@ -9,12 +9,14 @@ import { useEffect, useRef, useState } from "react"
 
 import addAttempt from "@/app/server-actions/addAttempt"
 
+import ControlBar from "../ControlBar"
+
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-const COUNT_DOWN_TIME = 5
+const COUNT_DOWN_TIME = 15
 
 export default function MonkeyMath() {
   // State variables
@@ -23,11 +25,13 @@ export default function MonkeyMath() {
   const [_message, setMessage] = useState<string>("")
   const [result, setResult] = useState<number | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [selectedTime, setSelectedTime] = useState<number>(COUNT_DOWN_TIME)
   const [timerEnded, setTimerEnded] = useState<boolean>(false)
   const [timeLeft, setTimeLeft] = useState<number>(COUNT_DOWN_TIME)
   const [timerStarted, setTimerStarted] = useState<boolean>(false)
   const [correctCount, setCorrectCount] = useState<number>(0)
   const [totalCount, setTotalCount] = useState<number>(0)
+  const [selectedMode, setSelectedMode] = useState<Mode>("Arithmetic")
   const inputRef = useRef(null)
 
   // Function to prompt the user with a math problem
@@ -123,11 +127,19 @@ export default function MonkeyMath() {
   }
 
   return (
-    <div className="flex flex-grow w-full flex-col justify-center items-center text-zinc-200">
+    <div className="flex flex-col items-center justify-center w-full text-zinc-200">
+      <ControlBar
+        selectedMode={selectedMode}
+        onModeChange={setSelectedMode}
+        selectedTime={selectedTime}
+        onTimeChange={setSelectedTime}
+      />
+
+      {/* Timer */}
       <div className="mb-4 flex items-center justify-center text-center">
         <p
           className="timer-display text-4xl text-gray-400"
-          style={{ visibility: timerStarted ? "visible" : "hidden" }}
+          style={{ visibility: timerStarted && !timerEnded ? "visible" : "hidden" }}
         >
           {timeLeft}
         </p>
