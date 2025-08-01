@@ -139,7 +139,7 @@ export default function MonkeyMath() {
       <div className="mb-4 flex items-center justify-center text-center">
         <p
           className="timer-display text-4xl text-gray-400"
-          style={{ visibility: timerStarted ? "visible" : "hidden" }}
+          style={{ visibility: timerStarted && !timerEnded ? "visible" : "hidden" }}
         >
           {timeLeft}
         </p>
