@@ -1,4 +1,4 @@
-import MonkeyMath from "@/components/BananaMath/MonkeyMath"
+import MonkeyMath from "@/components/MonkeyMath"
 import Footer from "@/components/Footer"
 import { createClient } from "@/utils/supabase/server"
 

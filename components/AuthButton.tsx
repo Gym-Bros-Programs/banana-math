@@ -1,50 +1,44 @@
-"use client"
+import { createClient } from '@/utils/supabase/server'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+export default async function AuthButton() {
+  const supabase = createClient()
 
-import { createClient } from "@/utils/supabase/client"
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-import LoginModal from "./auth/login-modal"
+  // Fetch profile if the user is logged in
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+    : { data: null }
 
-export default function AuthButton({ session }: { session: any }) {
-  const [showLogin, setShowLogin] = useState(false)
-  const router = useRouter()
+  const signOut = async () => {
+    'use server'
 
-  const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.refresh()
+    return redirect('/')
   }
 
-  if (session?.user) {
-    return (
-      <div className="flex items-center gap-4">
-        <span className="text-xl font-bold text-zinc-300">{session.user.user_metadata?.display_name || session.user.email}</span>
-        <button onClick={handleSignOut} className=" bg-red-900 rounded-md text-l px-5 py-2 text-white font-semibold">
+  return user ? (
+    <div className="flex items-center gap-4">
+      <span className="text-xl font-bold text-zinc-300">
+        {profile?.full_name ?? user.email}
+      </span>
+      <form action={signOut}>
+        <button className="bg-red-900 rounded-md text-l px-5 py-2 text-white font-semibold">
           Logout
         </button>
-      </div>
-    )
-  }
-
-  return (
-    <>
-      <button
-        onClick={() => setShowLogin(true)}
-        className="bg-green-800 hover:bg-green-700 rounded-md px-5 py-2 text-white font-semibold"
-      >
-        Login
-      </button>
-
-      <LoginModal
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
-        onSuccess={() => {
-          setShowLogin(false)
-          router.refresh()
-        }}
-      />
-    </>
+      </form>
+    </div>
+  ) : (
+    <Link
+      href="/login"
+      className="bg-green-800 hover:bg-green-700 rounded-md px-5 py-2 text-white font-semibold"
+    >
+      Login
+    </Link>
   )
 }
