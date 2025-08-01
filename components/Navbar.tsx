@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+
 import AuthButton from "./AuthButton";
 
 const TEXT_CLASS = "text-zinc-400 hover:text-zinc-200 transition-colors text-l p-2";

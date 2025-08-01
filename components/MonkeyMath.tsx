@@ -1,13 +1,8 @@
-
 "use client"
 import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 
-import {
-  createAttempt,
-  addUserAnswer,
-  finishAttempt,
-} from "@/app/server-actions/game-actions"
+import { createAttempt, addUserAnswer, finishAttempt } from "@/app/server-actions/game-actions"
 
 // Function to generate random numbers between min and max (inclusive)
 function getRandomNumber(min: number, max: number): number {
@@ -46,10 +41,10 @@ export default function MonkeyMath() {
 
     // prettier-ignore
     switch (operator) {
-      case "+": setResult(num1 + num2); break
-      case "-": setResult(num1 - num2); break
-      case "*": setResult(num1 * num2); break
-      case "/": setResult(num1 / num2); break
+      case "+": setResult(num1 + num2); break;
+      case "-": setResult(num1 - num2); break;
+      case "*": setResult(num1 * num2); break;
+      case "/": setResult(num1 / num2); break;
     }
 
     setProblem(`${num1} ${operator} ${num2}`)
@@ -78,7 +73,7 @@ export default function MonkeyMath() {
         attemptId,
         questionId: null,
         submittedAnswer: userInput,
-        isCorrect: wasCorrect,
+        isCorrect: wasCorrect
       })
     }
   }
@@ -104,7 +99,7 @@ export default function MonkeyMath() {
   // MODIFIED: This effect now handles starting and finishing the attempt
   useEffect(() => {
     if (inputRef.current && timeLeft > 0) {
-      (inputRef.current as unknown as HTMLInputElement).focus()
+      ;(inputRef.current as unknown as HTMLInputElement).focus()
     }
 
     // When the timer starts, create a new attempt in the database
@@ -151,7 +146,7 @@ export default function MonkeyMath() {
     setAttemptId(null)
     setTimeout(() => {
       if (inputRef.current) {
-        (inputRef.current as unknown as HTMLInputElement).focus()
+        ;(inputRef.current as unknown as HTMLInputElement).focus()
       }
     }, 100)
   }

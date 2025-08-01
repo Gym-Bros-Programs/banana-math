@@ -5,7 +5,7 @@ export default async function ProtectedPage() {
   const supabase = createClient();
 
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser();
 
   // We can safely assume the user exists because the middleware protects this route.
