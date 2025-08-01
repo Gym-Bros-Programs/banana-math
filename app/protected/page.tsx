@@ -1,12 +1,12 @@
-import MonkeyMath from "@/components/MonkeyMath";
-import { createClient } from "@/utils/supabase/server";
+import MonkeyMath from "@/components/MonkeyMath"
+import { createClient } from "@/utils/supabase/server"
 
 export default async function ProtectedPage() {
-  const supabase = createClient();
+  const supabase = createClient()
 
   const {
     data: { user }
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   // We can safely assume the user exists because the middleware protects this route.
   // We fetch the profile to greet the user.
@@ -14,7 +14,7 @@ export default async function ProtectedPage() {
     .from("profiles")
     .select("full_name")
     .eq("id", user!.id)
-    .single();
+    .single()
 
   return (
     <div className="flex-1 w-full flex flex-col items-center gap-10">
@@ -25,5 +25,5 @@ export default async function ProtectedPage() {
       </div>
       <MonkeyMath />
     </div>
-  );
+  )
 }

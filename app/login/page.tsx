@@ -21,18 +21,18 @@ const FormField = ({ name, label, type = "text", placeholder }: FormFieldProps) 
       required
     />
   </>
-);
+)
 
 // Server action wrappers - marked with "use server"
 const handleSignIn = async (formData: FormData): Promise<void> => {
-  "use server";
-  await signIn(formData);
-};
+  "use server"
+  await signIn(formData)
+}
 
 const handleSignUp = async (formData: FormData): Promise<void> => {
-  "use server";
-  await signUp(formData);
-};
+  "use server"
+  await signUp(formData)
+}
 
 export default function LoginPage({ searchParams }: { searchParams: { message: string } }) {
   return (
@@ -74,5 +74,5 @@ export default function LoginPage({ searchParams }: { searchParams: { message: s
         </p>
       )}
     </div>
-  );
+  )
 }

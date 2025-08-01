@@ -15,7 +15,7 @@ export default async function AttemptHistory() {
     return redirect("/login")
   }
 
-  const { data: entries, error: _error } = await supabase
+  const { data: entries } = await supabase
     .from("entries")
     .select("*")
     .eq("user_id", user?.id)

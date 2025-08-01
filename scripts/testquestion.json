@@ -4,23 +4,13 @@
     "correct_answer": "-20",
     "topic": "Arithmetic",
     "difficulty": 11,
-    "tags": [
-      "one_operation",
-      "addition",
-      "negative",
-      "2-digit"
-    ]
+    "tags": ["one_operation", "addition", "negative", "2-digit"]
   },
   {
     "question_text": "-10 - -10 = ?",
     "correct_answer": "0",
     "topic": "Arithmetic",
     "difficulty": 10,
-    "tags": [
-      "one_operation",
-      "subtraction",
-      "negative",
-      "2-digit"
-    ]
+    "tags": ["one_operation", "subtraction", "negative", "2-digit"]
   }
 ]

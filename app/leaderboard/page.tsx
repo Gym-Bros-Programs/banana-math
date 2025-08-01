@@ -15,7 +15,7 @@ export default async function AttemptHistory() {
     return redirect("/login")
   }
 
-  const { data: leaderboard, error: _error } = await supabase
+  const { data: leaderboard } = await supabase
     .from("entries")
     .select("*")
     .range(0, 9)

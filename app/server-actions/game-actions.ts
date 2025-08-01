@@ -1,4 +1,4 @@
-"use server";
+"use server"
 
 import { revalidatePath } from "next/cache"
 
@@ -88,12 +88,12 @@ export async function getRandomQuestion() {
   const { data, error } = await supabase.rpc("get_random_question")
 
   if (error || !data || data.length === 0) {
-    console.error("Error fetching random question, using fallback:", error);
+    console.error("Error fetching random question, using fallback:", error)
     return {
       id: "fallback-id-1",
       question_text: "2 + 2 = ?",
       correct_answer: "4"
-    };
+    }
   }
   return data[0]
 }

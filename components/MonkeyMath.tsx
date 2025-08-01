@@ -15,7 +15,7 @@ export default function MonkeyMath() {
   // State variables
   const [problem, setProblem] = useState<string>("")
   const [userInput, setUserInput] = useState<string>("")
-  const [_message, setMessage] = useState<string>("")
+  const [, setMessage] = useState<string>("")
   const [result, setResult] = useState<number | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [timerEnded, setTimerEnded] = useState<boolean>(false)
@@ -112,7 +112,7 @@ export default function MonkeyMath() {
         })
     }
 
-    let timer: NodeJS.Timeout;
+    let timer: NodeJS.Timeout
     if (timerStarted && timeLeft > 0) {
       timer = setTimeout(() => {
         setTimeLeft(timeLeft - 1)

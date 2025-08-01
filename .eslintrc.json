@@ -8,41 +8,18 @@
   "plugins": ["prettier", "import"],
   "rules": {
     "prettier/prettier": "warn",
-    "quotes": ["warn", "double", { "avoidEscape": true }],
-    "comma-dangle": ["error", "never"],
-    "no-trailing-spaces": "error",
-    "eol-last": ["error", "always"],
-    "semi": ["warn", "always"],
     "no-unused-vars": "warn",
     "import/order": [
       "error",
       {
-        "groups": [
-          "builtin",
-          "external",
-          "internal",
-          "parent",
-          "sibling",
-          "index",
-          "object"
-        ],
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index", "object"],
         "pathGroups": [
-          {
-            "pattern": "react",
-            "group": "external",
-            "position": "before"
-          },
-          {
-            "pattern": "@/**",
-            "group": "internal"
-          }
+          { "pattern": "react", "group": "external", "position": "before" },
+          { "pattern": "@/**", "group": "internal" }
         ],
         "pathGroupsExcludedImportTypes": ["react"],
         "newlines-between": "always",
-        "alphabetize": {
-          "order": "asc",
-          "caseInsensitive": true
-        }
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
       }
     ]
   }

@@ -16,7 +16,7 @@ export default async function AuthButton() {
     : { data: null }
 
   const signOut = async () => {
-    "use server";
+    "use server"
 
     const supabase = createClient()
     await supabase.auth.signOut()
