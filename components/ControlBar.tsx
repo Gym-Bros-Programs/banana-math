@@ -27,7 +27,7 @@ export default function ControlBar({
           <button
             key={mode}
             onClick={() => onModeChange(mode)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-full transition-all duration-150 ${
+            className={`flex items-center gap-1 px-3 py-1.5 text-2xl rounded-full transition-all duration-150 ${
               selectedMode === mode
                 ? "text-green-400"
                 : "hover:text-zinc-200"
@@ -40,7 +40,7 @@ export default function ControlBar({
       </div>
 
       {/* Divider */}
-      <div className="w-px h-4 bg-zinc-700 mx-2" />
+      <div className="w-2 h-8 bg-zinc-700 mx-2 rounded-full" />
 
       {/* Time buttons */}
       <div className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export default function ControlBar({
           <button
             key={time}
             onClick={() => onTimeChange(time)}
-            className={`px-3 py-1.5 rounded-full transition-all duration-150 ${
+            className={`px-3 py-1.5 text-2xl rounded-full transition-all duration-150 ${
               selectedTime === time
                 ? "text-green-400"
                 : "hover:text-zinc-200"
