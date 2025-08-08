@@ -164,7 +164,7 @@ export default function MonkeyMath() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full text-zinc-200">
+    <div className="flex flex-col items-center justify-center w-full text-text">
       <ControlBar
         selectedMode={selectedMode}
         onModeChange={setSelectedMode}
@@ -175,14 +175,14 @@ export default function MonkeyMath() {
       {/* Timer */}
       <div className="mb-4 flex items-center justify-center text-center">
         <p
-          className="timer-display text-4xl text-gray-400"
+          className="timer-display text-4xl text-btn-background"
           style={{ visibility: timerStarted && !timerEnded ? "visible" : "hidden" }}
         >
           {timeLeft}
         </p>
       </div>
 
-      <div className="Box flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-zinc-700/30 shadow-lg">
+      <div className="Box flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-foreground/30 shadow-lg">
         <div className="flex justify-center">
           <form onSubmit={handleSubmit}>
             <p className="Problem text-7xl pb-14 text-center" hidden={timerEnded}>
@@ -199,7 +199,7 @@ export default function MonkeyMath() {
                 setUserInput(e.target.value)
               }}
               type="number"
-              className={`text-5xl flash w-60 rounded-md border-0 bg-zinc-600/20 p-1 mb-5 text-center focus:outline-none focus:ring-4 focus:ring-zinc-400/20 ${getAnimationClass()}`}
+              className={`text-5xl flash w-60 rounded-md bg-input-box/20 p-1 mb-5 text-center text-black focus:outline-none focus:ring-4 focus:ring-border/40 ${getAnimationClass()}`}
               disabled={timerEnded}
             />
 

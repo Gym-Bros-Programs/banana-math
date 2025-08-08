@@ -99,7 +99,7 @@ export default function LoginPage({ searchParams }: { searchParams: { message: s
       </div>
 
       {searchParams?.message && (
-        <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center rounded-lg">
+        <p className="mt-4 p-4 bg-input/10 text-text text-center rounded-lg">
           {searchParams.message}
         </p>
       )}
