@@ -14,11 +14,12 @@ export default function Navbar({ isSupabaseConnected }: NavbarProps) {
     <nav className="w-full flex items-center justify-between p-4 border-b border-zinc-800">
       <div className="flex items-center space-x-4">
         <Image
-          src="https://placehold.co/69x69/18181b/ffffff?text=N"
+          src="/sgbanananananana.svg"
           alt="logo"
           width={40}
           height={40}
           className="rounded-lg"
+          unoptimized
         />
         <span className="text-2xl font-bold text-white">Numerify</span>
         <div
