@@ -1,5 +1,3 @@
-const { text } = require('stream/consumers');
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./app/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}"],
@@ -8,7 +6,11 @@ module.exports = {
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        text: "hsl(var(--text))",
+        text: {
+          active: "hsl(var(--text))",
+          hover: "hsl(var(--text-hover))",
+          inactive: "hsl(var(--muted-text))"
+        },
         muted: "hsl(var(--muted-text))",
         border: "hsl(var(--input-border))",
         input: "hsl(var(--input-box))",
@@ -17,6 +19,10 @@ module.exports = {
         btn: {
           background: "hsl(var(--btn-background))",
           "background-hover": "hsl(var(--btn-background-hover))"
+        },
+        tab: {
+          tab: "hsl(var(--tab-active))",
+          "tab-hover": "hsl(var(--tab-hover))"
         }
       },
       animation: {

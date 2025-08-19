@@ -20,7 +20,7 @@ export default function ControlBar({
   const times = [15, 30, 60, 120]
 
   return (
-    <div className="flex items-center justify-center gap-4 bg-zinc-800 px-4 py-2 rounded-xl text-sm font-medium text-zinc-400">
+    <div className="flex items-center justify-center gap-4  px-4 py-2 rounded-xl text-sm font-medium text-muted">
       {/* Mode buttons */}
       <div className="flex items-center gap-2">
         {modes.map((mode) => (
@@ -28,7 +28,7 @@ export default function ControlBar({
             key={mode}
             onClick={() => onModeChange(mode)}
             className={`flex items-center gap-1 px-3 py-1.5 text-2xl rounded-full transition-all duration-150 ${
-              selectedMode === mode ? "text-green-400" : "hover:text-zinc-200"
+              selectedMode === mode ? "text-btn-background" : "hover:text-btn-background-hover"
             }`}
           >
             {getIcon(mode)}

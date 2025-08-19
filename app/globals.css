@@ -5,15 +5,18 @@
 @layer base {
   :root {
       --background: 36 20% 10%;
-      --text: 50 100% 95%;
-      --muted-text: 38 30% 50%;
       --btn-background: 50 100% 52%;
       --btn-background-hover: 43 100% 51%;
+      --text: 50 100% 95%;
+      --muted-text: 38 30% 50%;
       --foreground: 39 28% 16%;
       --shadow-bg: 37 30% 8%;
       --input-box: 47 8% 44%;
       --input-border: 50 27% 82%;
       --bright: 349 100% 65%;
+
+      --tab-active: 50 95% 58%; /* slightly softer banana */
+      --tab-hover: 50 95% 65%;
   }
 }
 

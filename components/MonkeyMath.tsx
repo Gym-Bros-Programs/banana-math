@@ -203,10 +203,10 @@ export default function MonkeyMath() {
               disabled={timerEnded}
             />
 
-            <p className="text-center text-4xl white pb-8" hidden={!timerEnded}>
+            <p className="text-center text-4xl text-text pb-8" hidden={!timerEnded}>
               Correct: {correctCount} out of {totalCount}
             </p>
-            <p className="text-center text-4xl white pb-8" hidden={!timerEnded}>
+            <p className="text-center text-4xl text-text pb-8" hidden={!timerEnded}>
               Incorrect : {totalCount - correctCount} out of {totalCount}
             </p>
             <div className="flex justify-center space-x-10">
@@ -214,7 +214,7 @@ export default function MonkeyMath() {
                 type="button"
                 onClick={handleAttemptAgain}
                 hidden={!timerEnded}
-                className="rounded bg-zinc-600/20 px-6 py-4 text-4xl text-white hover:bg-opacity-30"
+                className="rounded bg-btn-background px-6 py-4 text-4xl text-black hover:bg-btn-background-hover"
               >
                 Attempt Again
               </button>
