@@ -3,7 +3,7 @@ import Link from "next/link"
 
 import AuthButton from "./AuthButton"
 
-const TEXT_CLASS = "text-zinc-400 hover:text-zinc-200 transition-colors text-l p-2"
+const TEXT_CLASS = "text-muted hover:text-btn-background-hover transition-colors text-l p-2"
 
 type NavbarProps = {
   isSupabaseConnected: boolean
@@ -27,7 +27,7 @@ export default function Navbar({ isSupabaseConnected }: NavbarProps) {
           title={isSupabaseConnected ? "Supabase Connected" : "Supabase Connection Failed"}
         />
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center text-2xl space-x-8">
         <Link href="/protected" className={TEXT_CLASS}>
           Game
         </Link>
