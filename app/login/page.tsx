@@ -21,7 +21,7 @@ const FormField = ({
     </label>
     <input
       id={name}
-      className="w-full rounded-md px-4 py-2 bg-zinc-800 text-white border-0 focus:ring-1 focus:ring-green-500 outline-none"
+      className="w-full rounded-md px-4 py-2 bg-background text-white border-0 focus:ring-1 focus:ring-green-500 outline-none"
       name={name}
       type={type}
       placeholder={placeholder}

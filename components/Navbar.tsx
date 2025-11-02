@@ -11,7 +11,7 @@ type NavbarProps = {
 
 export default function Navbar({ isSupabaseConnected }: NavbarProps) {
   return (
-    <nav className="w-full flex items-center justify-between p-4 border-b border-zinc-800">
+    <nav className="w-full flex items-center justify-between p-4 bg-background">
       <div className="flex items-center space-x-4">
         <Image
           src="/sgbanananananana.svg"

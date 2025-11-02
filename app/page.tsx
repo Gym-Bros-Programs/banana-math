@@ -17,7 +17,7 @@ export default async function Index() {
   const isSupabaseConnected = canInitSupabaseClient()
 
   return (
-    <div className="flex flex-1 w-full flex-col items-center justify-between bg-zinc-800 px-10 py-6">
+    <div className="flex flex-1 w-full flex-col items-center justify-between bg-background px-10 py-6">
       <Navbar isSupabaseConnected={isSupabaseConnected} />
       <MonkeyMath />
       <Footer />

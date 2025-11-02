@@ -185,7 +185,7 @@ export default function MonkeyMath() {
       <div className="Box flex flex-col items-center justify-center h-[400px] w-[700px] rounded-lg bg-foreground/30 shadow-lg">
         <div className="flex justify-center">
           <form onSubmit={handleSubmit}>
-            <p className="Problem text-7xl pb-14 text-center" hidden={timerEnded}>
+            <p className="Problem text-text-active text-7xl pb-14 text-center" hidden={timerEnded}>
               {problem}
             </p>
             <input
