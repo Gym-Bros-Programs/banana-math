@@ -3,7 +3,7 @@ import Link from "next/link"
 
 import AuthButton from "./AuthButton"
 
-const TEXT_CLASS = "text-zinc-400 hover:text-zinc-200 transition-colors text-l p-2"
+const TEXT_CLASS = "text-muted hover:text-btn-background-hover transition-colors text-l p-2"
 
 type NavbarProps = {
   isSupabaseConnected: boolean
@@ -11,14 +11,15 @@ type NavbarProps = {
 
 export default function Navbar({ isSupabaseConnected }: NavbarProps) {
   return (
-    <nav className="w-full flex items-center justify-between p-4 border-b border-zinc-800">
+    <nav className="w-full flex items-center justify-between p-4 bg-background">
       <div className="flex items-center space-x-4">
         <Image
-          src="https://placehold.co/69x69/18181b/ffffff?text=N"
+          src="/sgbanananananana.svg"
           alt="logo"
           width={40}
           height={40}
           className="rounded-lg"
+          unoptimized
         />
         <span className="text-2xl font-bold text-white">Numerify</span>
         <div
@@ -26,7 +27,7 @@ export default function Navbar({ isSupabaseConnected }: NavbarProps) {
           title={isSupabaseConnected ? "Supabase Connected" : "Supabase Connection Failed"}
         />
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center text-2xl space-x-8">
         <Link href="/protected" className={TEXT_CLASS}>
           Game
         </Link>

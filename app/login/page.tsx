@@ -21,7 +21,7 @@ const FormField = ({
     </label>
     <input
       id={name}
-      className="w-full rounded-md px-4 py-2 bg-zinc-800 text-white border-0 focus:ring-1 focus:ring-green-500 outline-none"
+      className="w-full rounded-md px-4 py-2 bg-background text-white border-0 focus:ring-1 focus:ring-green-500 outline-none"
       name={name}
       type={type}
       placeholder={placeholder}
@@ -99,7 +99,7 @@ export default function LoginPage({ searchParams }: { searchParams: { message: s
       </div>
 
       {searchParams?.message && (
-        <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center rounded-lg">
+        <p className="mt-4 p-4 bg-input/10 text-text text-center rounded-lg">
           {searchParams.message}
         </p>
       )}

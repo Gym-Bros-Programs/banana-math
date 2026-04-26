@@ -6,9 +6,23 @@ module.exports = {
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        text: {
+          active: "hsl(var(--text))",
+          hover: "hsl(var(--text-hover))",
+          inactive: "hsl(var(--muted-text))"
+        },
+        muted: "hsl(var(--muted-text))",
+        border: "hsl(var(--input-border))",
+        input: "hsl(var(--input-box))",
+        shadow: "hsl(var(--shadow-bg))",
+        bright: "hsl(var(--bright))",
         btn: {
           background: "hsl(var(--btn-background))",
           "background-hover": "hsl(var(--btn-background-hover))"
+        },
+        tab: {
+          tab: "hsl(var(--tab-active))",
+          "tab-hover": "hsl(var(--tab-hover))"
         }
       },
       animation: {
