@@ -12,6 +12,8 @@ export default async function AttemptHistory({
   const supabase = createClient()
   const modeFilter = searchParams.mode
   const diffFilter = searchParams.difficulty
+  const durationFilter = searchParams.duration
+  const questionsFilter = searchParams.questions
 
   const {
     data: { user },
@@ -33,6 +35,8 @@ export default async function AttemptHistory({
   if (modeFilter) query = query.eq("session_mode", modeFilter)
   if (diffFilter) query = query.eq("difficulty", diffFilter)
   if (timeframeFilter) query = query.eq("timeframe", timeframeFilter)
+  if (durationFilter) query = query.eq("duration_seconds", durationFilter)
+  if (questionsFilter) query = query.eq("question_limit", questionsFilter)
 
   let { data: leaderboard, error } = await query
 
@@ -79,6 +83,32 @@ export default async function AttemptHistory({
       ],
     },
   ]
+
+  if (modeFilter === "timed") {
+    filterOptions.push({
+      label: "Time",
+      key: "duration",
+      values: [
+        { label: "All", value: "all" },
+        { label: "15s", value: "15" },
+        { label: "30s", value: "30" },
+        { label: "60s", value: "60" },
+        { label: "120s", value: "120" },
+      ],
+    })
+  } else if (modeFilter === "fixed") {
+    filterOptions.push({
+      label: "Questions",
+      key: "questions",
+      values: [
+        { label: "All", value: "all" },
+        { label: "10Q", value: "10" },
+        { label: "25Q", value: "25" },
+        { label: "50Q", value: "50" },
+        { label: "100Q", value: "100" },
+      ],
+    })
+  }
 
   return (
     <div className="w-full flex-1 flex flex-col py-8 font-['Inter'] relative">

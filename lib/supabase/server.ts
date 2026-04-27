@@ -1,5 +1,10 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import fs from "fs"
+import path from "path"
+import os from "os"
+
+import { DEFAULT_MOCK_SESSIONS } from "./mock-data"
 
 /**
  * Dev modes (controlled by .env.local flags):
@@ -28,17 +33,23 @@ export const createClient = () => {
 
   // ── Mode 1 or 2 mock DB: no real Supabase client at all ──────────────────────
   if (MOCK_DB || !HAS_DB) {
-    const globalAny = global as any
-    if (!globalAny.mockSessions) {
-      globalAny.mockSessions = [
-        {
-          id: "mock-1", user_id: "mock-user-id", category: "arithmetic",
-          operator_set: ["addition", "subtraction"], allow_negatives: false,
-          session_mode: "timed", duration_seconds: 60, question_limit: null,
-          correct_count: 12, total_count: 15, accuracy: 80, percentile: 72.5,
-          completed_at: new Date(Date.now() - 3600000).toISOString(), session_answers: []
+    const MOCK_DB_FILE = path.join(os.tmpdir(), "banana_math_mock_db.json")
+
+    let mockSessions = [...DEFAULT_MOCK_SESSIONS]
+    try {
+      if (fs.existsSync(MOCK_DB_FILE)) {
+        const fileData = fs.readFileSync(MOCK_DB_FILE, "utf-8")
+        const parsed = JSON.parse(fileData)
+        if (Array.isArray(parsed) && parsed.length >= 5 && !parsed.some((s: any) => typeof s.accuracy !== "number")) {
+          mockSessions = parsed
+        } else {
+          fs.writeFileSync(MOCK_DB_FILE, JSON.stringify(mockSessions))
         }
-      ]
+      } else {
+        fs.writeFileSync(MOCK_DB_FILE, JSON.stringify(mockSessions))
+      }
+    } catch (e) {
+      // fallback to memory if fs fails
     }
 
     const mockQueryBuilder: any = {
@@ -47,6 +58,8 @@ export const createClient = () => {
       _modeFilter: null,
       _diffFilter: null,
       _timeframe: null,
+      _durationFilter: null,
+      _questionsFilter: null,
 
       select:  () => mockQueryBuilder,
       limit:   () => mockQueryBuilder,
@@ -55,29 +68,6 @@ export const createClient = () => {
       range:   () => mockQueryBuilder,
 
       insert: (data: any) => {
-           const newSession = { 
-             ...data, 
-             id: `mock-${Date.now()}`, 
-             completed_at: new Date().toISOString(), 
-             session_answers: [],
-             percentile: Math.min(100, Math.max(0, data.accuracy + (Math.random() * 10 - 5))),
-             // Store the primary score in a mock way for the leaderboard
-             _primaryScore: data.session_mode === "timed" ? data.correct_count : data.duration_seconds,
-             difficulty: data.difficulty || "Easy"
-           }
-           globalAny.mockSessions.unshift(newSession)
-           mockQueryBuilder._lastInserted = newSession
-        if (Array.isArray(data) && data.length > 0 && data[0].session_id) {
-           const sessionId = data[0].session_id
-           const session = globalAny.mockSessions.find((s: any) => s.id === sessionId)
-           if (session) {
-             session.session_answers = data.map((ans: any, idx: number) => ({
-               ...ans,
-               id: `ans-${Date.now()}-${idx}`,
-               question: { question_text: "?", correct_answer: "?" }
-             }))
-           }
-        }
         return mockQueryBuilder
       },
 
@@ -86,27 +76,33 @@ export const createClient = () => {
         if (col === "session_mode") mockQueryBuilder._modeFilter = val
         if (col === "difficulty") mockQueryBuilder._diffFilter = val
         if (col === "timeframe") mockQueryBuilder._timeframe = val
+        if (col === "duration_seconds") mockQueryBuilder._durationFilter = val
+        if (col === "question_limit") mockQueryBuilder._questionsFilter = val
         return mockQueryBuilder
       },
 
       order: () => mockQueryBuilder,
 
-      single: async () => ({ data: mockQueryBuilder._lastInserted || { id: "mock-session-id" }, error: null }),
+      single: async () => ({ data: { id: "mock-session-id" }, error: null }),
       
       then: (resolve: any) => {
         if (mockQueryBuilder._context === "sessions") {
-          resolve({ data: globalAny.mockSessions, error: null })
+          resolve({ data: mockSessions, error: null })
         } else {
           // ── Leaderboard Logic ──
           const now = new Date()
           const timeframe = mockQueryBuilder._timeframe || "all"
           const mode = mockQueryBuilder._modeFilter
           const diff = mockQueryBuilder._diffFilter
+          const duration = mockQueryBuilder._durationFilter
+          const questions = mockQueryBuilder._questionsFilter
 
-          let filtered = globalAny.mockSessions.filter((s: any) => {
+          let filtered = mockSessions.filter((s: any) => {
             if (s.accuracy === 0) return false
             if (mode && s.session_mode !== mode) return false
             if (diff && s.difficulty !== diff) return false
+            if (duration && String(s.duration_seconds) !== String(duration)) return false
+            if (questions && String(s.question_limit) !== String(questions)) return false
 
             const date = new Date(s.completed_at)
             if (timeframe === "weekly") {
