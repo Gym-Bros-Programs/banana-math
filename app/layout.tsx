@@ -32,9 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${inter.className} bg-background text-text-active`}>
         <div className="min-h-screen flex flex-col w-full">
-          <div className="w-full px-10 border-b border-[#2C2920] bg-[#17150F]">
-            <Navbar isSupabaseConnected={isSupabaseConnected} />
-          </div>
+          <Navbar isSupabaseConnected={isSupabaseConnected} />
           <main className="flex-1 w-full flex flex-col px-10">
             {children}
           </main>

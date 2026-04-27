@@ -3,7 +3,7 @@ import Link from "next/link"
 
 import AuthButton from "./AuthButton"
 
-const TEXT_CLASS = "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-2xl font-bold px-8 py-3 rounded-md"
+const TEXT_CLASS = "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-xl font-bold px-4 py-1.5 rounded-md"
 
 type NavbarProps = {
   isSupabaseConnected: boolean
@@ -11,7 +11,7 @@ type NavbarProps = {
 
 export default function Navbar({ isSupabaseConnected }: NavbarProps) {
   return (
-    <nav className="w-full flex items-center justify-between py-4 bg-transparent relative">
+    <nav className="w-full flex items-center justify-between py-3 px-10 bg-[#12100A] border-b border-[#2C2920] sticky top-0 z-50">
       <div className="z-10">
         <Link href="/" className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
           <Image
@@ -22,7 +22,7 @@ export default function Navbar({ isSupabaseConnected }: NavbarProps) {
             className="rounded-lg"
             unoptimized
           />
-          <span className="text-3xl font-black text-white">Banana Math</span>
+          <span className="text-2xl font-black text-white">Banana Math</span>
         </Link>
       </div>
 
@@ -40,7 +40,7 @@ export default function Navbar({ isSupabaseConnected }: NavbarProps) {
         </div>
       </div>
 
-      <div className="z-10 flex items-center gap-2 text-2xl">
+      <div className="z-10 flex items-center gap-2 text-xl">
         <AuthButton />
       </div>
     </nav>

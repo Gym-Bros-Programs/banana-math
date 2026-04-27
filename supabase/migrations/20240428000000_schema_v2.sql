@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   cqpm             numeric NOT NULL DEFAULT 0,
   percentile       numeric,                     -- 0-100, computed at session end
   is_leaderboard_eligible boolean NOT NULL DEFAULT false, -- true only for standard preset combos
+  difficulty       text    NOT NULL DEFAULT 'Easy',
   completed_at     timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
 
@@ -88,13 +89,15 @@ CREATE POLICY "profiles_own_write"     ON profiles FOR ALL    USING (auth.uid() 
 CREATE POLICY "questions_public_read"  ON questions FOR SELECT USING (true);
 
 -- sessions: users can read/write their own; guests (user_id IS NULL) handled client-side
-CREATE POLICY "sessions_own_all"       ON sessions FOR ALL    USING (auth.uid() = user_id);
-CREATE POLICY "sessions_public_read"   ON sessions FOR SELECT USING (true); -- for percentile
+CREATE POLICY sessions_own_all ON sessions FOR ALL USING (auth.uid() = user_id OR user_id IS NULL);
+CREATE POLICY sessions_public_read ON sessions FOR SELECT USING (true);
+ -- for percentile
 
 -- session_answers: readable via session ownership
-CREATE POLICY "session_answers_own"    ON session_answers FOR ALL
-  USING (session_id IN (SELECT id FROM sessions WHERE user_id = auth.uid()));
-CREATE POLICY "session_answers_read"   ON session_answers FOR SELECT USING (true);
+CREATE POLICY session_answers_own ON session_answers FOR ALL USING (
+  session_id IN (SELECT id FROM sessions WHERE (user_id = auth.uid() OR user_id IS NULL))
+);
+CREATE POLICY session_answers_read ON session_answers FOR SELECT USING (true);
 
 -- ─── RPC: get_questions_for_session ──────────────────────────
 -- Fetches a pool of deduplicated random questions matching session config.
@@ -102,7 +105,8 @@ CREATE OR REPLACE FUNCTION get_questions_for_session(
   p_category      text,
   p_operator_set  text[],
   p_allow_negatives boolean,
-  p_limit         integer
+  p_limit         integer,
+  p_max_difficulty integer DEFAULT 999
 )
 RETURNS SETOF questions
 LANGUAGE sql
@@ -113,12 +117,15 @@ AS $$
   WHERE  category  = p_category
     AND  sub_type  = ANY(p_operator_set)
     AND  (p_allow_negatives = true OR has_negatives = false)
+    AND  difficulty <= p_max_difficulty
   ORDER BY random()
   LIMIT  p_limit;
 $$;
 
 -- ─── RPC: calculate_session_percentile ───────────────────────
--- Computes what % of comparable sessions scored LOWER than the given session.
+-- Computes what % of comparable sessions scored BETTER than this session.
+-- Compares against ALL attempts (not just best scores).
+-- If you are the best, this returns 0 (Top 0%).
 CREATE OR REPLACE FUNCTION calculate_session_percentile(p_session_id uuid)
 RETURNS numeric
 LANGUAGE plpgsql
@@ -126,17 +133,19 @@ AS $$
 DECLARE
   v_session       sessions%ROWTYPE;
   v_total         integer;
-  v_below         integer;
+  v_better        integer;
 BEGIN
   SELECT * INTO v_session FROM sessions WHERE id = p_session_id;
 
   IF NOT FOUND THEN RETURN NULL; END IF;
 
-  -- Count sessions in the same comparison group
+  -- Count ALL comparable sessions
+  -- Note: We use order-insensitive array comparison for operator_set
   SELECT COUNT(*) INTO v_total
   FROM   sessions
   WHERE  category        = v_session.category
-    AND  operator_set    = v_session.operator_set
+    AND  operator_set    <@ v_session.operator_set
+    AND  operator_set    @> v_session.operator_set
     AND  allow_negatives = v_session.allow_negatives
     AND  session_mode    = v_session.session_mode
     AND  (
@@ -145,11 +154,13 @@ BEGIN
     )
     AND  completed_at IS NOT NULL;
 
-  -- Count sessions that scored strictly lower
-  SELECT COUNT(*) INTO v_below
+  -- Count sessions that scored strictly better
+  -- Primary: cqpm, Secondary: accuracy
+  SELECT COUNT(*) INTO v_better
   FROM   sessions
   WHERE  category        = v_session.category
-    AND  operator_set    = v_session.operator_set
+    AND  operator_set    <@ v_session.operator_set
+    AND  operator_set    @> v_session.operator_set
     AND  allow_negatives = v_session.allow_negatives
     AND  session_mode    = v_session.session_mode
     AND  (
@@ -157,11 +168,14 @@ BEGIN
       (v_session.session_mode = 'fixed'  AND question_limit   = v_session.question_limit)
     )
     AND  completed_at IS NOT NULL
-    AND  accuracy < v_session.accuracy;
+    AND  (
+      cqpm > v_session.cqpm OR 
+      (cqpm = v_session.cqpm AND accuracy > v_session.accuracy)
+    );
 
-  IF v_total = 0 THEN RETURN 100; END IF;
+  IF v_total <= 1 THEN RETURN 0; END IF;
 
-  RETURN ROUND((v_below::numeric / v_total::numeric) * 100, 1);
+  RETURN ROUND((v_better::numeric / v_total::numeric) * 100, 1);
 END;
 $$;
 

@@ -31,33 +31,68 @@ export default async function AttemptHistory({
 
   let query = supabase
     .from("sessions")
-    .select("*, profiles(username)")
+    .select("*")
     .order("cqpm", { ascending: false })
 
-  if (modeFilter) query = query.eq("session_mode", modeFilter)
-  if (diffFilter) query = query.eq("difficulty", diffFilter)
-  if (timeframeFilter) query = query.eq("timeframe", timeframeFilter)
-  if (durationFilter) query = query.eq("duration_seconds", durationFilter)
-  if (questionsFilter) query = query.eq("question_limit", questionsFilter)
-  
+  if (modeFilter && modeFilter !== "all") query = query.eq("session_mode", modeFilter)
+  if (diffFilter && diffFilter !== "all") query = query.eq("difficulty", diffFilter)
+  if (durationFilter && durationFilter !== "all") query = query.eq("duration_seconds", durationFilter)
+  if (questionsFilter && questionsFilter !== "all") query = query.eq("question_limit", questionsFilter)
+
   if (operatorFilter && operatorFilter !== "all") {
     const ops = OPERATOR_PRESETS[operatorFilter as keyof typeof OPERATOR_PRESETS]
-    if (ops) {
-      // Supabase array filtering: we want exact match for the sorted operator set
-      query = query.eq("operator_set", ops.sort())
+    if (ops && ops.length > 0) {
+      query = query.contains("operator_set", [...ops].sort())
     }
   }
 
   let { data: leaderboard, error } = await query
 
-  if (error || !leaderboard) {
+  if (error) {
+    console.error("❌ Leaderboard query error:", error.message, error.details)
     leaderboard = []
   }
+  if (!leaderboard) leaderboard = []
+
+  console.log(`📋 Leaderboard: ${leaderboard.length} entries (filter: ${operatorFilter})`)
+
+  // Fetch display names for all user_ids in the leaderboard
+  const userIds = [...new Set(leaderboard.map((e: any) => e.user_id).filter(Boolean))]
+  let profileMap: Record<string, string> = {}
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, display_name")
+      .in("id", userIds)
+    if (profiles) {
+      profiles.forEach((p: any) => {
+        profileMap[p.id] = p.display_name || p.username || "Unknown"
+      })
+    }
+  }
+
+  // Keep only each user's best score per unique type combination
+  // "type" = operator_set + difficulty + session_mode
+  const bestPerUserType = new Map<string, any>()
+  for (const entry of leaderboard) {
+    const typeKey = [
+      entry.user_id ?? "guest",
+      [...(entry.operator_set ?? [])].sort().join(","),
+      entry.difficulty ?? "",
+      entry.session_mode ?? "",
+    ].join("|")
+    const existing = bestPerUserType.get(typeKey)
+    if (!existing || (entry.cqpm ?? 0) > (existing.cqpm ?? 0)) {
+      bestPerUserType.set(typeKey, entry)
+    }
+  }
+  const dedupedLeaderboard = [...bestPerUserType.values()]
+    .sort((a, b) => (b.cqpm ?? 0) - (a.cqpm ?? 0))
 
   // Find user's best entry and rank
-  const userEntry = leaderboard.find(e => e.user_id === user?.id || e.user_email === "you@local.test")
-  const userRank = userEntry ? leaderboard.indexOf(userEntry) + 1 : null
-  const topN = leaderboard.slice(0, 10)
+  const userEntry = dedupedLeaderboard.find(e => e.user_id === user?.id)
+  const userRank = userEntry ? dedupedLeaderboard.indexOf(userEntry) + 1 : null
+  const topN = dedupedLeaderboard.slice(0, 10)
 
   const filterOptions = [
     {
@@ -132,11 +167,11 @@ export default async function AttemptHistory({
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col py-8 font-['Inter'] relative">
-      <div className="w-full space-y-6 pb-32">
-        <div className="border-b border-[#2C2920] pb-6 text-left">
-          <h1 className="text-4xl font-bold tracking-tight text-[#EDE6DA]">Leaderboard</h1>
-          <p className="text-[#C8BCAD] mt-2">Global ranking by score (Top 10)</p>
+    <div className="w-full flex-1 flex flex-col pt-10 pb-8 font-['Inter'] relative">
+      <div className="w-full pb-32">
+        <div className="border-b border-[#2C2920] pb-4 text-left">
+          <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">Leaderboard</h1>
+          <p className="text-[#C8BCAD] mt-1 text-sm">Global ranking by score (Top 10)</p>
         </div>
 
         <FilterBar options={filterOptions} />
@@ -154,6 +189,9 @@ export default async function AttemptHistory({
                   Score
                 </th>
                 <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                  Accuracy
+                </th>
+                <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Date
                 </th>
               </tr>
@@ -167,20 +205,23 @@ export default async function AttemptHistory({
                       #{index + 1}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-[#EDE6DA]">
-                      {entry.profiles?.username || entry.user_email || "Guest"} {isUser && "(You)"}
+                      {entry.user_id ? (profileMap[entry.user_id] || "Unknown") : "Guest"} {isUser && "(You)"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-lg text-[hsl(50,100%,52%)]">
-                      {entry.cqpm ?? 0} CQPM <span className="text-sm text-[#C8BCAD]">({entry.percentage ?? entry.accuracy}%)</span>
+                    <td className="px-6 py-4 whitespace-nowrap text-lg font-bold text-[hsl(50,100%,52%)]">
+                      {entry.cqpm ?? 0} QPM
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xl font-bold text-[#EDE6DA]">
+                      {entry.accuracy ?? 0}%
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD]">
-                      {new Date(entry.created_at).toLocaleDateString()}
+                      {entry.completed_at ? new Date(entry.completed_at).toLocaleDateString() : "N/A"}
                     </td>
                   </tr>
                 )
               })}
               {topN.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-[#C8BCAD]">
+                  <td colSpan={5} className="px-6 py-12 text-center text-[#C8BCAD]">
                     No entries found for this category.
                   </td>
                 </tr>
@@ -202,7 +243,7 @@ export default async function AttemptHistory({
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest text-[#C8BCAD] font-bold">Best Entry</span>
             <span className="text-xl font-medium text-[#EDE6DA]">
-              {userEntry ? `${userEntry.cqpm ?? 0} CQPM` : "No attempts"}
+              {userEntry ? `${userEntry.cqpm ?? 0} QPM` : "No attempts"}
             </span>
           </div>
         </div>

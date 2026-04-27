@@ -19,17 +19,51 @@ export async function getQuestionsForSession(config: SessionConfig, difficulty: 
 
   const sortedOperatorSet = [...config.operatorSet].sort() as QuestionSubType[]
 
+  const difficultyMapping: Record<Difficulty, number> = {
+    Easy: 4,    // e.g. 9 + 9 = 18 -> 1+1+2 = 4
+    Medium: 6,  // e.g. 99 + 9 = 108 -> 2+1+3 = 6
+    Hard: 8,    // e.g. 99 + 99 = 198 -> 2+2+3 = 7
+  }
+  const maxDiff = difficultyMapping[difficulty] ?? 4
+
+  // Check if each requested operator has at least some questions in the DB
+  const { data: counts, error: countError } = await supabase
+    .from("questions")
+    .select("sub_type")
+    .in("sub_type", sortedOperatorSet)
+    .eq("has_negatives", config.allowNegatives)
+    .lte("difficulty", maxDiff)
+
+  if (countError) {
+    console.error("❌ DB Error checking question counts:", countError.message, countError.details)
+    return []
+  }
+
+  console.log(`📊 DB Check: Found ${counts.length} rows matching ops: ${sortedOperatorSet.join(", ")} at maxDiff: ${maxDiff}`)
+
+  // Ensure every requested operator is represented in the available pool
+  const availableOps = new Set(counts.map(q => q.sub_type))
+  const missingOps = sortedOperatorSet.filter(op => !availableOps.has(op))
+
+  if (missingOps.length > 0) {
+    console.warn(`Missing questions in DB for: ${missingOps.join(", ")} at ${difficulty} difficulty`)
+    return [] // UI will show "No questions found"
+  }
+
   const { data, error } = await supabase.rpc("get_questions_for_session", {
     p_category: config.category,
     p_operator_set: sortedOperatorSet,
     p_allow_negatives: config.allowNegatives,
     p_limit: poolSize,
+    p_max_difficulty: maxDiff,
   })
 
   if (error || !data || data.length === 0) {
-    console.warn("DB unavailable — using local generator:", error?.message)
-    return getFallbackQuestions(config, difficulty)
+    console.warn("⚠️ DB RPC get_questions_for_session returned no results:", error?.message || "Empty Pool")
+    return []
   }
+
+  console.log(`✅ Fetched ${data.length} questions from DB for session.`)
 
   return data as Question[]
 }
@@ -47,6 +81,8 @@ export async function createSession(
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  console.log("🚀 SERVER createSession called:", { correctCount, totalCount, difficulty })
 
   const accuracy = totalCount > 0 ? (correctCount / totalCount) * 100 : 0
   const sortedOperatorSet = [...config.operatorSet].sort()
@@ -74,9 +110,13 @@ export async function createSession(
     .single()
 
   if (error || !data) {
-    console.error("Error creating session, using mock:", error)
+    console.error("❌ DB Error creating session:", error)
+    if (error?.details) console.error("Details:", error.details)
+    if (error?.hint) console.error("Hint:", error.hint)
     return "mock-session-id"
   }
+
+  console.log("✅ Session saved successfully to DB:", data.id)
 
   // Compute and store percentile asynchronously (don't block the response)
   updateSessionPercentile(data.id).catch(console.error)

@@ -14,7 +14,7 @@ export default async function AuthButton() {
 
   // Fetch profile if the user is logged in
   const { data: profile } = user
-    ? await supabase.from("profiles").select("full_name").eq("id", user.id).single()
+    ? await supabase.from("profiles").select("display_name").eq("id", user.id).single()
     : { data: null }
 
   const signOut = async () => {

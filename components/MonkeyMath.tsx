@@ -2,6 +2,7 @@
 
 import type { ChangeEvent, FormEvent } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 
 import ControlBar from "@/components/ControlBar"
 import type { Type, Mode, Difficulty } from "@/components/ControlBar"
@@ -23,6 +24,7 @@ const TYPE_TO_OPS: Record<Type, QuestionSubType[]> = {
 // Session constants
 const DEFAULT_TIME = 15
 const GUEST_STORAGE_KEY = "banana_math_guest_sessions"
+const SETTINGS_STORAGE_KEY = "banana_math_game_settings"
 type GamePhase = "settings" | "playing" | "results"
 
 interface AnswerRecord {
@@ -42,11 +44,56 @@ function guestCount() {
 }
 
 export default function MonkeyMath() {
-  const [phase, setPhase] = useState<GamePhase>("settings")
-  const [selectedType, setSelectedType] = useState<Type>("+ − × ÷")
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("Easy")
-  const [selectedLength, setSelectedLength] = useState(DEFAULT_TIME)
-  const [selectedMode, setSelectedMode] = useState<Mode>("timed")
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const phase = (searchParams.get("phase") as GamePhase) || "settings"
+
+  const setPhase = useCallback((newPhase: GamePhase, method: "push" | "replace" = "push") => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (newPhase === "settings") {
+      params.delete("phase")
+    } else {
+      params.set("phase", newPhase)
+    }
+    const newUrl = `${pathname}?${params.toString()}`
+    
+    if (method === "push") {
+      router.push(newUrl, { scroll: false })
+    } else {
+      router.replace(newUrl, { scroll: false })
+    }
+  }, [pathname, router, searchParams])
+
+  const [selectedType, setSelectedType] = useState<Type>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
+      if (saved) return JSON.parse(saved).type || "+ − × ÷"
+    }
+    return "+ − × ÷"
+  })
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
+      if (saved) return JSON.parse(saved).difficulty || "Easy"
+    }
+    return "Easy"
+  })
+  const [selectedLength, setSelectedLength] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
+      if (saved) return JSON.parse(saved).length || DEFAULT_TIME
+    }
+    return DEFAULT_TIME
+  })
+  const [selectedMode, setSelectedMode] = useState<Mode>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
+      if (saved) return JSON.parse(saved).mode || "timed"
+    }
+    return "timed"
+  })
 
   const [questionPool, setQuestionPool] = useState<Question[]>([])
   const [poolIndex, setPoolIndex] = useState(0)
@@ -55,6 +102,7 @@ export default function MonkeyMath() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
+  const answersRef = useRef<AnswerRecord[]>([]) // Ref to avoid stale closure in timer
   const [questionStart, setQuestionStart] = useState(Date.now())
   const [timeLeft, setTimeLeft] = useState(DEFAULT_TIME)
   const [timeElapsed, setTimeElapsed] = useState(0)
@@ -63,6 +111,7 @@ export default function MonkeyMath() {
   const [lastPenalty, setLastPenalty] = useState<number | null>(null)
   const [guestWarning, setGuestWarning] = useState(false)
   const [isLoadingPool, setIsLoadingPool] = useState(false)
+  const [poolError, setPoolError] = useState<string | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -72,6 +121,37 @@ export default function MonkeyMath() {
       inputRef.current?.focus()
     }
   }, [currentQuestion, phase])
+
+  // Persist settings to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({
+        type: selectedType,
+        difficulty: selectedDifficulty,
+        mode: selectedMode,
+        length: selectedLength
+      }))
+    }
+  }, [selectedType, selectedDifficulty, selectedMode, selectedLength])
+
+  // Sync back button / URL changes
+  useEffect(() => {
+    if (phase === "settings") {
+      setTimerActive(false)
+      setAnswers([])
+      setCurrentQuestion(null)
+      // Only reset timeLeft if we aren't currently playing
+      setTimeLeft(selectedLength)
+      setPoolError(null)
+    }
+  }, [phase, selectedLength])
+
+  // Handle page refresh or direct links (e.g. user loads /?phase=playing with empty state)
+  useEffect(() => {
+    if (phase !== "settings" && questionPool.length === 0 && !isLoadingPool) {
+      setPhase("settings", "replace")
+    }
+  }, [phase, questionPool.length, isLoadingPool, setPhase])
 
   const correctCount = answers.filter((a) => a.isCorrect).length
   const totalCount = answers.length
@@ -100,27 +180,30 @@ export default function MonkeyMath() {
     }
   }, [])
 
-  // Timer tick
+  // Timer tick — pure decrement only, no side-effects inside state updater
   useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (timerActive) {
-      interval = setInterval(() => {
-        if (selectedMode === "timed") {
-          setTimeLeft((prev) => {
-            if (prev <= 1) {
-              setTimerActive(false)
-              handleSessionEnd()
-              return 0
-            }
-            return prev - 1
-          })
-        } else {
-          setTimeElapsed((prev) => prev + 1)
-        }
-      }, 1000)
-    }
-    return () => clearInterval(interval)
+    if (!timerActive) return
+    const id = setInterval(() => {
+      if (selectedMode === "timed") {
+        setTimeLeft((prev) => (prev <= 1 ? 0 : prev - 1))
+      } else {
+        setTimeElapsed((prev) => prev + 1)
+      }
+    }, 1000)
+    return () => clearInterval(id)
   }, [timerActive, selectedMode])
+
+  // Detect timer expiry — runs AFTER the render where timeLeft hits 0
+  const expiryHandled = useRef(false)
+  useEffect(() => {
+    if (timeLeft === 0 && phase === "playing" && !expiryHandled.current) {
+      expiryHandled.current = true
+      setTimerActive(false)
+      handleSessionEnd(answersRef.current)
+    }
+    if (timeLeft > 0) expiryHandled.current = false
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, phase])
 
   function handleStart() {
     if (activeOps.length === 0) return
@@ -128,6 +211,13 @@ export default function MonkeyMath() {
 
     const config = buildConfig()
     getQuestionsForSession(config, selectedDifficulty).then(pool => {
+      if (pool.length === 0) {
+        setPoolError(`No ${selectedDifficulty} questions found for ${selectedType} in the database.`)
+        setIsLoadingPool(false)
+        return
+      }
+
+      setPoolError(null)
       setQuestionPool(pool)
       setAnswers([])
       setPoolIndex(0)
@@ -177,6 +267,7 @@ export default function MonkeyMath() {
     }
     const newAnswers = [...answers, record]
     setAnswers(newAnswers)
+    answersRef.current = newAnswers // Keep ref in sync
 
     if (selectedMode === "question based" && newAnswers.length >= selectedLength) {
       setTimeout(() => handleSessionEnd(newAnswers), 400)
@@ -187,47 +278,65 @@ export default function MonkeyMath() {
 
   async function handleSessionEnd(finalAnswers = answers) {
     setTimerActive(false)
-    setPhase("results")
+    setPhase("results", "replace")
 
     const config = buildConfig()
     const correct = finalAnswers.filter((a) => a.isCorrect).length
     const total = finalAnswers.length
-    if (total === 0) return
+    console.log("🏁 handleSessionEnd called:", { total, correct, difficulty: selectedDifficulty })
+    if (total === 0) {
+      console.warn("⚠️ Session ended with 0 answers, skipping save.")
+      return
+    }
 
     const finalT = selectedMode === "timed" ? selectedLength : timeElapsed
-    const sessionId = await createSession(config, correct, total, finalT, selectedDifficulty)
 
-    if (sessionId !== "mock-session-id") {
-      await saveSessionAnswers(sessionId, finalAnswers.map((a) => ({
-        questionId: a.questionId, userAnswer: a.userAnswer,
-        isCorrect: a.isCorrect, timeTakenMs: a.timeTakenMs,
-        orderInSession: a.orderInSession,
-      })))
-    } else {
-      if (guestCount() >= GUEST_SESSION_LIMIT - 1) setGuestWarning(true)
-      saveGuestSession({
-        id: `guest-${Date.now()}`, category: "arithmetic",
-        operator_set: activeOps, allow_negatives: false,
-        session_mode: selectedMode === "timed" ? "timed" : "fixed",
-        duration_seconds: finalT,
-        question_limit: selectedMode === "question based" ? selectedLength : null,
-        correct_count: correct, total_count: total,
-        difficulty: selectedDifficulty,
-        accuracy: total > 0 ? (correct / total) * 100 : 0,
-        is_leaderboard_eligible: true, completed_at: new Date().toISOString(),
-        session_answers: finalAnswers,
-      })
+    try {
+      const sessionId = await createSession(config, correct, total, finalT, selectedDifficulty)
+      console.log("📝 createSession returned:", sessionId)
+
+      if (sessionId !== "mock-session-id") {
+        console.log("💾 Saving session answers for:", sessionId)
+        await saveSessionAnswers(sessionId, finalAnswers.map((a) => ({
+          questionId: a.questionId, userAnswer: a.userAnswer,
+          isCorrect: a.isCorrect, timeTakenMs: a.timeTakenMs,
+          orderInSession: a.orderInSession,
+        })))
+        console.log("✅ Session and answers saved successfully!")
+      } else {
+        console.warn("⚠️ Got mock-session-id — saving to localStorage instead.")
+        if (guestCount() >= GUEST_SESSION_LIMIT - 1) setGuestWarning(true)
+        saveGuestSession({
+          id: `guest-${Date.now()}`, category: "arithmetic",
+          operator_set: activeOps, allow_negatives: false,
+          session_mode: selectedMode === "timed" ? "timed" : "fixed",
+          duration_seconds: finalT,
+          question_limit: selectedMode === "question based" ? selectedLength : null,
+          correct_count: correct, total_count: total,
+          difficulty: selectedDifficulty,
+          accuracy: total > 0 ? (correct / total) * 100 : 0,
+          is_leaderboard_eligible: true, completed_at: new Date().toISOString(),
+          session_answers: finalAnswers,
+        })
+      }
+    } catch (err) {
+      console.error("❌ Exception in handleSessionEnd:", err)
     }
   }
 
   function handleAbandon() {
-    setTimerActive(false); setPhase("settings")
-    setAnswers([]); setCurrentQuestion(null); setTimeLeft(selectedLength)
+    setTimerActive(false)
+    setAnswers([])
+    setCurrentQuestion(null)
+    setTimeLeft(selectedLength)
+    setPhase("settings")
   }
 
   function handleBackToSettings() {
-    setPhase("settings"); setAnswers([])
-    setCurrentQuestion(null); setGuestWarning(false)
+    setAnswers([])
+    setCurrentQuestion(null)
+    setGuestWarning(false)
+    setPhase("settings")
   }
 
   function getBoxBackground() {
@@ -243,7 +352,7 @@ export default function MonkeyMath() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center w-full text-text">
       {phase === "settings" ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-24 w-full">
+        <div className="flex-1 flex flex-col items-center justify-center gap-32 w-full">
           <ControlBar
             selectedType={selectedType} onTypeChange={setSelectedType}
             selectedDifficulty={selectedDifficulty} onDifficultyChange={setSelectedDifficulty}
@@ -257,11 +366,16 @@ export default function MonkeyMath() {
           >
             {isLoadingPool ? "Loading..." : "Start"}
           </button>
+          {poolError && (
+            <div className="text-red-500 font-bold text-lg animate-bounce text-center max-w-[400px]">
+              {poolError}
+            </div>
+          )}
         </div>
       ) : phase === "playing" ? (
         <div className="relative flex items-center justify-between w-[650px] h-[110px] px-12 py-6 rounded-2xl bg-foreground/30 shadow-lg text-[#EDE6DA] font-medium">
           <div className="flex-1 flex justify-start">
-            <button onClick={handleAbandon}
+            <button onClick={handleStart}
               className="px-6 py-2 text-lg border-2 border-btn-background text-btn-background rounded-full hover:bg-btn-background/10 transition-all active:scale-95">
               Restart
             </button>
@@ -305,6 +419,7 @@ export default function MonkeyMath() {
               value={userInput}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
               type="number"
+              readOnly={isSubmitting}
               className={`text-6xl w-80 rounded-xl p-4 mb-5 text-center focus:outline-none transition-all duration-100 ${isCorrect === true ? "bg-green-600 text-white" :
                   isCorrect === false ? "bg-red-600 text-white" :
                     "bg-input-box/20 text-black"

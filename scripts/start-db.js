@@ -8,6 +8,6 @@ spawn("npx", ["next", "dev"], {
   env: {
     ...process.env,
     NEXT_PUBLIC_MOCK_DB: "false",
-    NEXT_PUBLIC_MOCK_AUTH: "true"
+    NEXT_PUBLIC_MOCK_AUTH: "false"
   }
 });

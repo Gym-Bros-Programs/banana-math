@@ -148,7 +148,7 @@ export const createClient = () => {
               uniqueEntries.set(key, {
                 user_email: s.user_id === "mock-user-id" ? "you@local.test" : "guest@numerify.me",
                 percentage: s._primaryScore,
-                created_at: s.completed_at,
+                completed_at: s.completed_at,
                 _primaryScore: s._primaryScore,
                 user_id: s.user_id
               })
@@ -156,8 +156,8 @@ export const createClient = () => {
           })
 
           const baseLeaderboard = [
-            { user_email: "expert@math.ninja", percentage: 100, created_at: new Date(Date.now() - 3600000).toISOString(), _primaryScore: 100 },
-            { user_email: "demo@local.test", percentage: 95, created_at: new Date(Date.now() - 7200000).toISOString(), _primaryScore: 95 },
+            { user_email: "expert@math.ninja", percentage: 100, completed_at: new Date(Date.now() - 3600000).toISOString(), _primaryScore: 100 },
+            { user_email: "demo@local.test", percentage: 95, completed_at: new Date(Date.now() - 7200000).toISOString(), _primaryScore: 95 },
           ]
 
           const combined = [...baseLeaderboard, ...Array.from(uniqueEntries.values())]

@@ -29,34 +29,36 @@ export default async function AttemptHistory({
     return redirect("/login")
   }
 
-  const activeUser = user || { id: "mock-id", email: "demo@local.test" }
-
   let sessions: SessionWithAnswers[] = []
 
-  if (user) {
-    let query = supabase
-      .from("sessions")
-      .select(`
+  // If logged in, fetch user's sessions. If not, fetch sessions where user_id is null (Guest sessions)
+  let query = supabase
+    .from("sessions")
+    .select(`
+      *,
+      session_answers (
         *,
-        session_answers (
-          *,
-          question:questions (*)
-        )
-      `)
-      .eq("user_id", activeUser.id)
-      .order("completed_at", { ascending: false })
-      .limit(50)
+        question:questions (*)
+      )
+    `)
+    .order("completed_at", { ascending: false })
+    .limit(50)
 
-    if (modeFilter) query = query.eq("session_mode", modeFilter)
-    if (diffFilter) query = query.eq("difficulty", diffFilter)
-    if (durationFilter) query = query.eq("duration_seconds", durationFilter)
-    if (questionsFilter) query = query.eq("question_limit", questionsFilter)
+  if (user) {
+    query = query.eq("user_id", user.id)
+  } else {
+    query = query.is("user_id", null)
+  }
 
-    const { data, error } = await query
+  if (modeFilter && modeFilter !== "all") query = query.eq("session_mode", modeFilter)
+  if (diffFilter && diffFilter !== "all") query = query.eq("difficulty", diffFilter)
+  if (durationFilter && durationFilter !== "all") query = query.eq("duration_seconds", durationFilter)
+  if (questionsFilter && questionsFilter !== "all") query = query.eq("question_limit", questionsFilter)
 
-    if (!error && data) {
-      sessions = data as unknown as SessionWithAnswers[]
-    }
+  const { data, error } = await query
+
+  if (!error && data) {
+    sessions = data as unknown as SessionWithAnswers[]
   }
 
   // Mock data fallback is handled directly in server.ts when MOCK_DB is true
@@ -121,13 +123,13 @@ export default async function AttemptHistory({
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col py-8 font-['Inter']">
-      <div className="w-full space-y-6">
+    <div className="w-full flex-1 flex flex-col pt-10 pb-8 font-['Inter']">
+      <div className="w-full">
 
         {/* Header */}
-        <div className="border-b border-[#2C2920] pb-6 text-left">
-          <h1 className="text-4xl font-bold tracking-tight text-[#EDE6DA]">Session History</h1>
-          <p className="text-[#C8BCAD] mt-2">Your past practice sessions</p>
+        <div className="border-b border-[#2C2920] pb-4 text-left">
+          <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">Session History</h1>
+          <p className="text-[#C8BCAD] mt-1 text-sm">Your past practice sessions</p>
         </div>
 
         <FilterBar options={filterOptions} />
@@ -137,7 +139,7 @@ export default async function AttemptHistory({
             No sessions yet. Play a game to see your history here.
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {sessions.map((session) => {
               const accuracy = Number(session.accuracy).toFixed(1)
               const isGood   = session.accuracy >= 80
@@ -148,11 +150,19 @@ export default async function AttemptHistory({
                   className="rounded-xl border border-[#2C2920] bg-[#17150F] overflow-hidden group"
                 >
                   {/* Session summary row */}
-                  <summary className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-[#211E17] transition-colors list-none">
+                  <summary className="flex items-center justify-between px-6 py-3 cursor-pointer hover:bg-[#211E17] transition-colors list-none">
                     <div className="flex items-center gap-6">
+                      {/* QPM Score */}
+                      <div className="flex flex-col items-center min-w-[70px]">
+                        <span className="text-2xl font-black text-[hsl(50,100%,52%)] leading-none">
+                          {session.cqpm ?? 0}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold mt-1">QPM</span>
+                      </div>
+
                       {/* Accuracy badge */}
                       <div
-                        className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm border-2 ${
+                        className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-xs border-2 ${
                           isGood
                             ? "border-[hsl(50,100%,52%)] text-[hsl(50,100%,52%)]"
                             : "border-red-500 text-red-400"
@@ -161,40 +171,54 @@ export default async function AttemptHistory({
                         {accuracy}%
                       </div>
 
-                      <div className="flex flex-col gap-1">
-                        {/* Operator set + negatives */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-[#EDE6DA] font-semibold text-lg">
-                            {formatOperatorSet(session.operator_set)}
-                          </span>
-                          {session.allow_negatives && (
-                            <span className="text-xs px-2 py-0.5 rounded-full border border-[#2C2920] text-[#C8BCAD]">
-                              negatives
-                            </span>
-                          )}
-                          <span className="text-[hsl(50,100%,52%)] text-sm font-medium ml-2">
-                            {session.cqpm ?? 0} CQPM
-                          </span>
+                      {/* Unified Info Row */}
+                      <div className="flex items-center gap-5 text-xl text-[#EDE6DA] font-semibold">
+                        {/* Operator Chip - compact */}
+                        <div className="bg-[#211E17] px-2 py-0.5 rounded border border-[#2C2920] text-[#EDE6DA] font-bold text-xs flex items-center gap-1.5">
+                          <span className="text-base font-medium">{formatOperatorSet(session.operator_set)}</span>
+                          {session.allow_negatives && <span className="w-0.5 h-0.5 rounded-full bg-[#C8BCAD]/30" />}
+                          {session.allow_negatives && <span className="text-[8px] text-[#C8BCAD]">NEG</span>}
                         </div>
-                        <div className="text-sm text-[#C8BCAD]">
-                          {session.correct_count}/{session.total_count} correct
-                          {" · "}
+
+                        <div className="h-4 w-px bg-[#2C2920]" />
+
+                        <span className="flex items-center gap-2 whitespace-nowrap">
+                          {session.correct_count}/{session.total_count} <span className="text-[10px] uppercase tracking-widest text-[#C8BCAD]">correct</span>
+                        </span>
+
+                        <div className="h-4 w-px bg-[#2C2920]" />
+
+                        <span className="text-[#C8BCAD] whitespace-nowrap">
                           {session.session_mode === "timed"
                             ? `${session.duration_seconds}s`
-                            : `${session.question_limit} questions`}
-                          {" · "}
+                            : `${session.question_limit} Q`}
+                        </span>
+
+                        <div className="h-4 w-px bg-[#2C2920]" />
+
+                        <span className="text-[#8B8476] text-base font-normal whitespace-nowrap">
                           {formatDate(session.completed_at)}
-                        </div>
+                        </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-6 text-right">
                       {session.percentile !== null && (
-                        <div className="flex flex-col items-end">
-                          <span className="text-[hsl(50,100%,52%)] font-bold text-xl">
-                            Top {(100 - (session.percentile ?? 0)).toFixed(1)}%
-                          </span>
-                          <span className="text-xs text-[#C8BCAD]">vs same type</span>
+                        <div className="flex flex-col items-end mr-4">
+                          {(session.percentile ?? 0) <= 50 ? (
+                            <>
+                              <span className="text-[hsl(50,100%,52%)] font-black text-3xl">
+                                Top {(session.percentile ?? 0).toFixed(1)}%
+                              </span>
+                              <span className="text-xs text-[#C8BCAD] font-medium uppercase tracking-tight">
+                                vs same type
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-red-400 font-bold uppercase tracking-tight py-2">
+                              Below average user
+                            </span>
+                          )}
                         </div>
                       )}
                       <span className="text-[#2C2920] group-open:rotate-180 transition-transform text-xl">▼</span>
