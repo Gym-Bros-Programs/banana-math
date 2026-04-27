@@ -69,8 +69,11 @@ function generateOne(subType: QuestionSubType, difficulty: Difficulty, allowNeg:
       return makeQ("addition", a, b, "+", a + b, `${a} + ${b} = ?`, uid)
     }
     case "subtraction": {
-      const a = applyNegative(rand(r.min, r.max), allowNeg)
-      const b = applyNegative(rand(r.min, r.max), allowNeg)
+      let a = rand(r.min, r.max)
+      let b = rand(r.min, r.max)
+      if (!allowNeg && a < b) [a, b] = [b, a] // Ensure positive result
+      a = applyNegative(a, allowNeg)
+      b = applyNegative(b, allowNeg)
       return makeQ("subtraction", a, b, "-", a - b, `${a} - ${b} = ?`, uid)
     }
     case "multiplication": {

@@ -38,7 +38,9 @@ export async function getQuestionsForSession(config: SessionConfig, difficulty: 
 export async function createSession(
   config: SessionConfig,
   correctCount: number,
-  totalCount: number
+  totalCount: number,
+  finalTime?: number,
+  difficulty: string = "Easy"
 ): Promise<string> {
   const supabase = createClient()
 
@@ -57,12 +59,13 @@ export async function createSession(
       operator_set: sortedOperatorSet,
       allow_negatives: config.allowNegatives,
       session_mode: config.sessionMode,
-      duration_seconds: config.durationSeconds ?? null,
+      duration_seconds: finalTime ?? config.durationSeconds ?? null,
       question_limit: config.questionLimit ?? null,
       correct_count: correctCount,
       total_count: totalCount,
       accuracy: parseFloat(accuracy.toFixed(2)),
       is_leaderboard_eligible: isLeaderboardEligible(config),
+      difficulty: difficulty,
     })
     .select("id")
     .single()

@@ -19,24 +19,136 @@ import { cookies } from "next/headers"
  *  Mode 4 — Production (deployed, same as mode 3 but in Vercel/hosting env)
  */
 
-const MOCK_DB   = process.env.NEXT_PUBLIC_MOCK_DB   === "true"
-const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
-const HAS_DB    = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
 export const createClient = () => {
+  const MOCK_DB   = process.env.NEXT_PUBLIC_MOCK_DB   === "true"
+  const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
+  const HAS_DB    = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
   const cookieStore = cookies()
 
   // ── Mode 1 or 2 mock DB: no real Supabase client at all ──────────────────────
   if (MOCK_DB || !HAS_DB) {
+    const globalAny = global as any
+    if (!globalAny.mockSessions) {
+      globalAny.mockSessions = [
+        {
+          id: "mock-1", user_id: "mock-user-id", category: "arithmetic",
+          operator_set: ["addition", "subtraction"], allow_negatives: false,
+          session_mode: "timed", duration_seconds: 60, question_limit: null,
+          correct_count: 12, total_count: 15, accuracy: 80, percentile: 72.5,
+          completed_at: new Date(Date.now() - 3600000).toISOString(), session_answers: []
+        }
+      ]
+    }
+
     const mockQueryBuilder: any = {
+      _lastInserted: null,
+      _context: "leaderboard", // default unless 'eq' changes it
+      _modeFilter: null,
+      _diffFilter: null,
+      _timeframe: null,
+
       select:  () => mockQueryBuilder,
-      eq:      () => mockQueryBuilder,
       limit:   () => mockQueryBuilder,
-      insert:  () => mockQueryBuilder,
       update:  () => mockQueryBuilder,
       upsert:  () => mockQueryBuilder,
-      order:   async () => ({ data: [], error: null }),
-      single:  async () => ({ data: { id: "mock-session-id" }, error: null }),
+      range:   () => mockQueryBuilder,
+
+      insert: (data: any) => {
+           const newSession = { 
+             ...data, 
+             id: `mock-${Date.now()}`, 
+             completed_at: new Date().toISOString(), 
+             session_answers: [],
+             percentile: Math.min(100, Math.max(0, data.accuracy + (Math.random() * 10 - 5))),
+             // Store the primary score in a mock way for the leaderboard
+             _primaryScore: data.session_mode === "timed" ? data.correct_count : data.duration_seconds,
+             difficulty: data.difficulty || "Easy"
+           }
+           globalAny.mockSessions.unshift(newSession)
+           mockQueryBuilder._lastInserted = newSession
+        if (Array.isArray(data) && data.length > 0 && data[0].session_id) {
+           const sessionId = data[0].session_id
+           const session = globalAny.mockSessions.find((s: any) => s.id === sessionId)
+           if (session) {
+             session.session_answers = data.map((ans: any, idx: number) => ({
+               ...ans,
+               id: `ans-${Date.now()}-${idx}`,
+               question: { question_text: "?", correct_answer: "?" }
+             }))
+           }
+        }
+        return mockQueryBuilder
+      },
+
+      eq: (col: string, val: any) => {
+        if (col === "user_id") mockQueryBuilder._context = "sessions"
+        if (col === "session_mode") mockQueryBuilder._modeFilter = val
+        if (col === "difficulty") mockQueryBuilder._diffFilter = val
+        if (col === "timeframe") mockQueryBuilder._timeframe = val
+        return mockQueryBuilder
+      },
+
+      order: () => mockQueryBuilder,
+
+      single: async () => ({ data: mockQueryBuilder._lastInserted || { id: "mock-session-id" }, error: null }),
+      
+      then: (resolve: any) => {
+        if (mockQueryBuilder._context === "sessions") {
+          resolve({ data: globalAny.mockSessions, error: null })
+        } else {
+          // ── Leaderboard Logic ──
+          const now = new Date()
+          const timeframe = mockQueryBuilder._timeframe || "all"
+          const mode = mockQueryBuilder._modeFilter
+          const diff = mockQueryBuilder._diffFilter
+
+          let filtered = globalAny.mockSessions.filter((s: any) => {
+            if (s.accuracy === 0) return false
+            if (mode && s.session_mode !== mode) return false
+            if (diff && s.difficulty !== diff) return false
+
+            const date = new Date(s.completed_at)
+            if (timeframe === "weekly") {
+              const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+              if (date < weekAgo) return false
+            } else if (timeframe === "monthly") {
+              const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+              if (date < monthAgo) return false
+            } else if (timeframe === "yearly") {
+              const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate())
+              if (date < yearAgo) return false
+            }
+            return true
+          })
+
+          // Deduplicate: Keep only the highest score per user for this category combo
+          const uniqueEntries = new Map<string, any>()
+          filtered.forEach((s: any) => {
+            const key = `${s.user_id}-${s.session_mode}-${s.difficulty}`
+            const existing = uniqueEntries.get(key)
+            if (!existing || s._primaryScore > existing._primaryScore) {
+              uniqueEntries.set(key, {
+                user_email: s.user_id === "mock-user-id" ? "you@local.test" : "guest@numerify.me",
+                percentage: s._primaryScore,
+                created_at: s.completed_at,
+                _primaryScore: s._primaryScore,
+                user_id: s.user_id
+              })
+            }
+          })
+
+          const baseLeaderboard = [
+            { user_email: "expert@math.ninja", percentage: 100, created_at: new Date(Date.now() - 3600000).toISOString(), _primaryScore: 100 },
+            { user_email: "demo@local.test", percentage: 95, created_at: new Date(Date.now() - 7200000).toISOString(), _primaryScore: 95 },
+          ]
+
+          const combined = [...baseLeaderboard, ...Array.from(uniqueEntries.values())]
+          combined.sort((a, b) => b._primaryScore - a._primaryScore)
+
+          resolve({ data: combined, error: null })
+        }
+      }
     }
     return {
       auth: {

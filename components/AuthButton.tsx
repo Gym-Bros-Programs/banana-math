@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 
 import { createClient } from "@/lib/supabase/server"
 
-const TEXT_CLASS = "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-xl font-medium px-8 py-3 rounded-md"
+const TEXT_CLASS = "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-2xl font-bold px-8 py-3 rounded-md"
 
 export default async function AuthButton() {
   const supabase = createClient()
@@ -31,7 +31,7 @@ export default async function AuthButton() {
         {profile?.full_name ?? user.email}
       </Link>
       <form action={signOut}>
-        <button className="bg-[#5C1A1A] hover:bg-[#7A2323] transition-colors rounded-md text-xl px-5 py-2 text-[#EDE6DA] font-semibold ml-2">
+        <button className="bg-[#5C1A1A] hover:bg-[#7A2323] transition-colors rounded-md text-2xl px-6 py-2 text-[#EDE6DA] font-bold ml-2">
           Logout
         </button>
       </form>
@@ -39,7 +39,7 @@ export default async function AuthButton() {
   ) : (
     <Link
       href="/login"
-      className="bg-btn-background hover:bg-btn-background-hover rounded-md px-5 py-2 text-black font-semibold"
+      className="bg-btn-background hover:bg-btn-background-hover rounded-md px-6 py-2 text-2xl text-black font-bold"
     >
       Login
     </Link>

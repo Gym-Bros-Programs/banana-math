@@ -60,6 +60,7 @@ export interface Session {
   accuracy: number
   percentile: number | null
   is_leaderboard_eligible: boolean
+  difficulty: string | null
   completed_at: string
 }
 

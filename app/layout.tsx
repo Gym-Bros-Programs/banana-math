@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 w-full flex flex-col px-10">
             {children}
           </main>
-          <div className="w-full px-10 py-3 border-t border-[#2C2920] mt-auto bg-[#17150F]">
+          <div className="w-full py-3 border-t border-[#2C2920] mt-auto bg-[#17150F]">
             <Footer />
           </div>
         </div>

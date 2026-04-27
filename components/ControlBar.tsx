@@ -59,11 +59,11 @@ function VerticalPicker<T extends string>({
       <button onClick={handleUp} className="text-muted p-1 transition-colors hover:text-btn-background">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
       </button>
-      <div className="relative h-8 w-full overflow-hidden my-1">
+      <div className="relative h-10 w-full overflow-hidden my-1">
         <div className="absolute w-full flex flex-col transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateY(-${vIdx * 32}px)` }}>
+          style={{ transform: `translateY(-${vIdx * 40}px)` }}>
           {repeated.map((opt, i) => (
-            <div key={i} className="h-8 flex items-center justify-center text-[hsl(50,100%,52%)] text-2xl font-medium w-full text-center truncate select-none">
+            <div key={i} className="h-10 flex items-center justify-center text-[hsl(50,100%,52%)] text-3xl font-medium w-full text-center truncate select-none">
               {opt}
             </div>
           ))}
@@ -98,7 +98,7 @@ export default function ControlBar({
 
   // If current selectedTime isn't in the new set, auto-pick the first option
   React.useEffect(() => {
-    if (!timeOptions.includes(selectedTime)) onTimeChange(timeOptions[2])
+    if (!timeOptions.includes(selectedTime)) onTimeChange(timeOptions[0])
   }, [sessionMode])
 
   return (
@@ -118,7 +118,7 @@ export default function ControlBar({
       <div className="flex items-center gap-4">
         {timeOptions.map((val) => (
           <button key={val} onClick={() => onTimeChange(val)}
-            className={`px-3 py-1.5 text-3xl font-bold rounded-full transition-all duration-150 ${
+            className={`px-3 py-1.5 text-4xl font-bold rounded-full transition-all duration-150 ${
               selectedTime === val ? "text-[hsl(50,100%,52%)]" : "text-muted hover:text-[hsl(50,100%,52%)]"
             }`}>
             {val}
