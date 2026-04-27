@@ -17,6 +17,7 @@ export default async function AttemptHistory({
   const diffFilter = searchParams.difficulty
   const durationFilter = searchParams.duration
   const questionsFilter = searchParams.questions
+  const operatorFilter = searchParams.operators || "all"
 
   const {
     data: { user },
@@ -55,6 +56,14 @@ export default async function AttemptHistory({
   if (durationFilter && durationFilter !== "all") query = query.eq("duration_seconds", durationFilter)
   if (questionsFilter && questionsFilter !== "all") query = query.eq("question_limit", questionsFilter)
 
+  if (operatorFilter && operatorFilter !== "all") {
+    const { OPERATOR_PRESETS } = require("@/lib/types/database")
+    const ops = OPERATOR_PRESETS[operatorFilter as any]
+    if (ops && ops.length > 0) {
+      query = query.contains("operator_set", [...ops].sort())
+    }
+  }
+
   const { data, error } = await query
 
   if (!error && data) {
@@ -92,6 +101,21 @@ export default async function AttemptHistory({
         { label: "Easy", value: "Easy" },
         { label: "Medium", value: "Medium" },
         { label: "Hard", value: "Hard" },
+      ],
+    },
+    {
+      label: "Type",
+      key: "operators",
+      type: "dropdown",
+      values: [
+        { label: "All Types", value: "all" },
+        { label: "+ − × ÷", value: "all_4" },
+        { label: "+ −", value: "add_sub" },
+        { label: "× ÷", value: "mul_div" },
+        { label: "+ only", value: "addition" },
+        { label: "− only", value: "subtraction" },
+        { label: "× only", value: "multiplication" },
+        { label: "÷ only", value: "division" },
       ],
     },
   ]
@@ -160,64 +184,105 @@ export default async function AttemptHistory({
                         <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold mt-1">QPM</span>
                       </div>
 
-                      {/* Accuracy badge */}
-                      <div
-                        className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-xs border-2 ${
-                          isGood
-                            ? "border-[hsl(50,100%,52%)] text-[hsl(50,100%,52%)]"
-                            : "border-red-500 text-red-400"
-                        }`}
-                      >
-                        {accuracy}%
+                      {/* Accuracy badge - SVG progress circle */}
+                      <div className="relative w-14 h-14 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
+                          {/* Red track (incorrect/background) */}
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="#ef4444"
+                            strokeWidth="8"
+                            fill="transparent"
+                          />
+                          {/* Yellow progress (accuracy) */}
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="hsl(50,100%,52%)"
+                            strokeWidth="8"
+                            fill="transparent"
+                            strokeDasharray={150.8}
+                            strokeDashoffset={150.8 - (150.8 * session.accuracy) / 100}
+                            strokeLinecap="round"
+                            className="transition-all duration-500 ease-out"
+                          />
+                        </svg>
+                        <span className="absolute text-white font-black text-[10px]">
+                          {accuracy}%
+                        </span>
                       </div>
 
                       {/* Unified Info Row */}
-                      <div className="flex items-center gap-5 text-xl text-[#EDE6DA] font-semibold">
-                        {/* Operator Chip - compact */}
-                        <div className="bg-[#211E17] px-2 py-0.5 rounded border border-[#2C2920] text-[#EDE6DA] font-bold text-xs flex items-center gap-1.5">
-                          <span className="text-base font-medium">{formatOperatorSet(session.operator_set)}</span>
-                          {session.allow_negatives && <span className="w-0.5 h-0.5 rounded-full bg-[#C8BCAD]/30" />}
-                          {session.allow_negatives && <span className="text-[8px] text-[#C8BCAD]">NEG</span>}
+                      <div className="flex items-center gap-6 text-[#EDE6DA] font-semibold">
+                        {/* Operator Chip */}
+                        <div className="bg-[#211E17] px-2.5 py-1 rounded border border-[#2C2920] text-[#EDE6DA] font-bold text-xs flex items-center gap-1.5 min-w-[95px] justify-center">
+                          <span className="text-base leading-none">{formatOperatorSet(session.operator_set)}</span>
+                          {session.allow_negatives && <span className="w-1 h-1 rounded-full bg-red-500/50" />}
                         </div>
 
                         <div className="h-4 w-px bg-[#2C2920]" />
 
-                        <span className="flex items-center gap-2 whitespace-nowrap">
-                          {session.correct_count}/{session.total_count} <span className="text-[10px] uppercase tracking-widest text-[#C8BCAD]">correct</span>
-                        </span>
+                        {/* Stats Segment */}
+                        <div className="flex items-center gap-3 whitespace-nowrap min-w-[155px]">
+                          <div className="flex items-baseline gap-1 min-w-[80px] justify-end">
+                            <span className="text-xl font-bold leading-none">{session.correct_count}/{session.total_count}</span>
+                            <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold">correct</span>
+                          </div>
+                          <div className="min-w-[42px] flex justify-center">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded border font-black uppercase tracking-tighter ${
+                              session.difficulty === "Hard" ? "border-red-500/30 text-red-400 bg-red-500/5" :
+                              session.difficulty === "Medium" ? "border-orange-500/30 text-orange-400 bg-orange-500/5" :
+                              "border-[hsl(50,100%,52%)]/30 text-[hsl(50,100%,52%)] bg-[hsl(50,100%,52%)]/5"
+                            }`}>
+                              {session.difficulty === "Medium" ? "MED" : session.difficulty?.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
 
                         <div className="h-4 w-px bg-[#2C2920]" />
 
-                        <span className="text-[#C8BCAD] whitespace-nowrap">
-                          {session.session_mode === "timed"
-                            ? `${session.duration_seconds}s`
-                            : `${session.question_limit} Q`}
-                        </span>
+                        {/* Length Segment */}
+                        <div className="min-w-[55px] text-center">
+                          <span className="text-[#C8BCAD] text-lg font-medium">
+                            {session.session_mode === "timed"
+                              ? `${session.duration_seconds}s`
+                              : `${session.question_limit}Q`}
+                          </span>
+                        </div>
 
                         <div className="h-4 w-px bg-[#2C2920]" />
 
-                        <span className="text-[#8B8476] text-base font-normal whitespace-nowrap">
+                        {/* Date Segment */}
+                        <span className="text-[#8B8476] text-sm font-normal whitespace-nowrap">
                           {formatDate(session.completed_at)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 text-right">
+                    <div className="flex items-center gap-6 text-right min-w-[140px] justify-end">
                       {session.percentile !== null && (
-                        <div className="flex flex-col items-end mr-4">
+                        <div className="flex flex-col items-end">
                           {(session.percentile ?? 0) <= 50 ? (
                             <>
-                              <span className="text-[hsl(50,100%,52%)] font-black text-3xl">
+                              <span className="text-[hsl(50,100%,52%)] font-black text-3xl leading-none">
                                 Top {(session.percentile ?? 0).toFixed(1)}%
                               </span>
-                              <span className="text-xs text-[#C8BCAD] font-medium uppercase tracking-tight">
+                              <span className="text-[9px] text-[#C8BCAD] font-bold uppercase tracking-widest mt-1">
                                 vs same type
                               </span>
                             </>
                           ) : (
-                            <span className="text-xs text-red-400 font-bold uppercase tracking-tight py-2">
-                              Below average user
-                            </span>
+                            <div className="flex flex-col items-end">
+                              <span className="text-red-400 font-black text-lg leading-none">
+                                AVG-
+                              </span>
+                              <span className="text-[9px] text-red-400/50 font-bold uppercase tracking-widest mt-1">
+                                below average
+                              </span>
+                            </div>
                           )}
                         </div>
                       )}
@@ -231,12 +296,12 @@ export default async function AttemptHistory({
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="text-[#C8BCAD] text-left border-b border-[#2C2920]">
-                            <th className="pb-2 font-medium w-8">#</th>
-                            <th className="pb-2 font-medium">Question</th>
-                            <th className="pb-2 font-medium">Your Answer</th>
-                            <th className="pb-2 font-medium">Correct Answer</th>
-                            <th className="pb-2 font-medium text-right">Time</th>
-                            <th className="pb-2 font-medium text-right w-8"></th>
+                            <th className="pb-2 font-medium w-8 border-r border-[#2C2920]">#</th>
+                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">Question</th>
+                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">Your Answer</th>
+                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">Correct Answer</th>
+                            <th className="pb-2 font-medium text-right border-r border-[#2C2920] px-4">Time</th>
+                            <th className="pb-2 font-medium text-right w-8 px-4"></th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#2C2920]">
@@ -244,28 +309,28 @@ export default async function AttemptHistory({
                             .sort((a, b) => a.order_in_session - b.order_in_session)
                             .map((answer) => (
                               <tr key={answer.id} className="hover:bg-[#211E17] transition-colors">
-                                <td className="py-2 text-[#C8BCAD]">
+                                <td className="py-2 text-[#C8BCAD] border-r border-[#2C2920]">
                                   {answer.order_in_session}
                                 </td>
-                                <td className="py-2 text-[#EDE6DA]">
+                                <td className="py-2 text-[#EDE6DA] border-r border-[#2C2920] px-4">
                                   {answer.question?.question_text ?? "—"}
                                 </td>
                                 <td
-                                  className={`py-2 ${
+                                  className={`py-2 border-r border-[#2C2920] px-4 ${
                                     answer.is_correct ? "text-[hsl(50,100%,52%)]" : "text-red-400"
                                   }`}
                                 >
                                   {answer.user_answer}
                                 </td>
-                                <td className="py-2 text-[#C8BCAD]">
+                                <td className="py-2 text-[#C8BCAD] border-r border-[#2C2920] px-4">
                                   {answer.question?.correct_answer ?? "—"}
                                 </td>
-                                <td className="py-2 text-[#C8BCAD] text-right text-xs">
+                                <td className="py-2 text-[#C8BCAD] text-right text-xs border-r border-[#2C2920] px-4">
                                   {answer.time_taken_ms !== null
                                     ? `${(answer.time_taken_ms / 1000).toFixed(1)}s`
                                     : "—"}
                                 </td>
-                                <td className="py-2 text-right">
+                                <td className="py-2 text-right px-4">
                                   {answer.is_correct ? (
                                     <span className="text-[hsl(50,100%,52%)]">✓</span>
                                   ) : (

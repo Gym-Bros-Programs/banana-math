@@ -16,7 +16,7 @@ export type QuestionSubType =
 
 export type SessionMode = "timed" | "fixed"
 
-export type OperatorPreset = "all" | "add_sub" | "mul_div" | "addition" | "subtraction" | "multiplication" | "division" | "custom"
+export type OperatorPreset = "all" | "all_4" | "add_sub" | "mul_div" | "addition" | "subtraction" | "multiplication" | "division" | "custom"
 
 // ─── Guest storage ─────────────────────────────────────────────────────────────
 
@@ -100,7 +100,8 @@ export interface SessionConfig {
 // ─── Operator preset helpers ───────────────────────────────────────────────
 
 export const OPERATOR_PRESETS: Record<OperatorPreset, QuestionSubType[]> = {
-  all:            ["addition", "subtraction", "multiplication", "division"],
+  all:            [], // represents "no filter" on operators
+  all_4:          ["addition", "subtraction", "multiplication", "division"],
   add_sub:        ["addition", "subtraction"],
   mul_div:        ["multiplication", "division"],
   addition:       ["addition"],
@@ -111,7 +112,8 @@ export const OPERATOR_PRESETS: Record<OperatorPreset, QuestionSubType[]> = {
 }
 
 export const PRESET_LABELS: Record<OperatorPreset, string> = {
-  all:            "All 4 operations",
+  all:            "All Types",
+  all_4:          "+ − × ÷",
   add_sub:        "+ and − only",
   mul_div:        "× and ÷ only",
   addition:       "Addition only",
@@ -123,7 +125,7 @@ export const PRESET_LABELS: Record<OperatorPreset, string> = {
 
 /** These presets are leaderboard-eligible; custom combos or advanced types are not */
 export const LEADERBOARD_PRESETS: OperatorPreset[] = [
-  "all", "add_sub", "mul_div", "addition", "subtraction", "multiplication", "division",
+  "all", "all_4", "add_sub", "mul_div", "addition", "subtraction", "multiplication", "division",
 ]
 
 // ─── Supabase Database type (for typed client) ─────────────────────────────

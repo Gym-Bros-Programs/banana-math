@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { createClient } from "@/lib/supabase/server"
 import { OPERATOR_PRESETS, LEADERBOARD_PRESETS } from "@/lib/types/database"
+import { formatOperatorSet } from "@/lib/formatters"
 
 import FilterBar from "@/components/FilterBar"
 
@@ -129,7 +130,8 @@ export default async function AttemptHistory({
       key: "operators",
       type: "dropdown",
       values: [
-        { label: "All 4", value: "all" },
+        { label: "All Types", value: "all" },
+        { label: "+ − × ÷", value: "all_4" },
         { label: "+ −", value: "add_sub" },
         { label: "× ÷", value: "mul_div" },
         { label: "+ only", value: "addition" },
@@ -179,16 +181,22 @@ export default async function AttemptHistory({
           <table className="min-w-full">
             <thead>
               <tr>
-                <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Rank
                 </th>
-                <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   User ID
                 </th>
-                <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                  Diff
+                </th>
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Score
                 </th>
-                <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Accuracy
                 </th>
                 <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
@@ -201,17 +209,56 @@ export default async function AttemptHistory({
                 const isUser = entry.user_id === user?.id || entry.user_email === "you@local.test"
                 return (
                   <tr key={index} className={`hover:bg-[#211E17] transition-colors ${isUser ? "bg-[#211E17]/50" : ""}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD]">
+                    <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD] border-r border-[#2C2920]">
                       #{index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-[#EDE6DA]">
+                    <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-[#EDE6DA] border-r border-[#2C2920]">
                       {entry.user_id ? (profileMap[entry.user_id] || "Unknown") : "Guest"} {isUser && "(You)"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-lg font-bold text-[hsl(50,100%,52%)]">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#C8BCAD] border-r border-[#2C2920]">
+                      {formatOperatorSet(entry.operator_set)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs font-bold border-r border-[#2C2920]">
+                      <span className={`px-2 py-0.5 rounded border ${
+                        entry.difficulty === "Hard" ? "border-red-500/30 text-red-400 bg-red-500/5" :
+                        entry.difficulty === "Medium" ? "border-orange-500/30 text-orange-400 bg-orange-500/5" :
+                        "border-[hsl(50,100%,52%)]/30 text-[hsl(50,100%,52%)] bg-[hsl(50,100%,52%)]/5"
+                      }`}>
+                        {entry.difficulty === "Medium" ? "MED" : entry.difficulty?.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-lg font-bold text-[hsl(50,100%,52%)] border-r border-[#2C2920]">
                       {entry.cqpm ?? 0} QPM
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xl font-bold text-[#EDE6DA]">
-                      {entry.accuracy ?? 0}%
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-[#2C2920]">
+                      <div className="flex items-center justify-center relative w-12 h-12 mx-auto">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
+                          {/* Red track */}
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="#ef4444"
+                            strokeWidth="8"
+                            fill="transparent"
+                          />
+                          {/* Yellow progress */}
+                          <circle
+                            cx="28"
+                            cy="28"
+                            r="24"
+                            stroke="hsl(50,100%,52%)"
+                            strokeWidth="8"
+                            fill="transparent"
+                            strokeDasharray={150.8}
+                            strokeDashoffset={150.8 - (150.8 * (entry.accuracy ?? 0)) / 100}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <span className="absolute text-white font-black text-[10px]">
+                          {entry.accuracy ?? 0}%
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD]">
                       {entry.completed_at ? new Date(entry.completed_at).toLocaleDateString() : "N/A"}
@@ -221,7 +268,7 @@ export default async function AttemptHistory({
               })}
               {topN.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-[#C8BCAD]">
+                  <td colSpan={7} className="px-6 py-12 text-center text-[#C8BCAD]">
                     No entries found for this category.
                   </td>
                 </tr>
@@ -249,7 +296,15 @@ export default async function AttemptHistory({
         </div>
         <div className="text-right">
           <span className="text-xs text-[#C8BCAD]">
-            Filtered by: {modeFilter || "All"} · {diffFilter || "All"} · {operatorFilter || "All"} · {timeframeFilter || "All Time"}
+            Filtered by: {
+              filterOptions.find(o => o.key === "mode")?.values.find(v => v.value === (modeFilter || "all"))?.label || "All"
+            } · {
+              filterOptions.find(o => o.key === "difficulty")?.values.find(v => v.value === (diffFilter || "all"))?.label || "All"
+            } · {
+              filterOptions.find(o => o.key === "operators")?.values.find(v => v.value === (operatorFilter || "all"))?.label || "All Types"
+            } · {
+              filterOptions.find(o => o.key === "timeframe")?.values.find(v => v.value === (timeframeFilter || "all"))?.label || "All Time"
+            }
           </span>
         </div>
       </div>
