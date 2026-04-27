@@ -9,15 +9,39 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Numerify",
+  title: "Banana Math",
   description: "The fastest way to learn mental math"
 }
 
+import Navbar from "@/components/Navbar"
+import Footer from "@/components/Footer"
+import { createClient } from "@/lib/supabase/server"
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const canInitSupabaseClient = () => {
+    try {
+      createClient()
+      return true
+    } catch (_e) {
+      return false
+    }
+  }
+  const isSupabaseConnected = canInitSupabaseClient()
+
   return (
     <html lang="en">
       <body className={`${inter.className} bg-background text-text-active`}>
-        <main className="min-h-screen flex flex-col items-center">{children}</main>
+        <div className="min-h-screen flex flex-col w-full">
+          <div className="w-full px-10 border-b border-[#2C2920] bg-[#17150F]">
+            <Navbar isSupabaseConnected={isSupabaseConnected} />
+          </div>
+          <main className="flex-1 w-full flex flex-col px-10">
+            {children}
+          </main>
+          <div className="w-full px-10 py-3 border-t border-[#2C2920] mt-auto bg-[#17150F]">
+            <Footer />
+          </div>
+        </div>
       </body>
     </html>
   )

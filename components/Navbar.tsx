@@ -3,7 +3,7 @@ import Link from "next/link"
 
 import AuthButton from "./AuthButton"
 
-const TEXT_CLASS = "text-muted hover:text-btn-background-hover transition-colors text-l p-2"
+const TEXT_CLASS = "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-xl font-medium px-8 py-3 rounded-md"
 
 type NavbarProps = {
   isSupabaseConnected: boolean
@@ -11,8 +11,8 @@ type NavbarProps = {
 
 export default function Navbar({ isSupabaseConnected }: NavbarProps) {
   return (
-    <nav className="w-full flex items-center justify-between p-4 bg-background">
-      <div className="flex items-center space-x-4">
+    <nav className="w-full flex items-center justify-between py-3 bg-transparent">
+      <Link href="/" className="flex items-center space-x-4 hover:opacity-80 transition-opacity">
         <Image
           src="/sgbanananananana.svg"
           alt="logo"
@@ -21,18 +21,14 @@ export default function Navbar({ isSupabaseConnected }: NavbarProps) {
           className="rounded-lg"
           unoptimized
         />
-        <span className="text-2xl font-bold text-white">Numerify</span>
-        <div
-          className={`w-3 h-3 rounded-full ${isSupabaseConnected ? "bg-green-500" : "bg-red-500"}`}
-          title={isSupabaseConnected ? "Supabase Connected" : "Supabase Connection Failed"}
-        />
-      </div>
-      <div className="flex items-center text-2xl space-x-8">
-        <Link href="/protected" className={TEXT_CLASS}>
+        <span className="text-2xl font-bold text-white">Banana Math</span>
+      </Link>
+      <div className="flex items-center text-2xl gap-2">
+        <Link href="/" className={TEXT_CLASS}>
           Game
         </Link>
         <Link href="/attempts" className={TEXT_CLASS}>
-          My Attempts
+          History
         </Link>
         <Link href="/leaderboard" className={TEXT_CLASS}>
           Leaderboard

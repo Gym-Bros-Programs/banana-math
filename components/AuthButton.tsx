@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 
 import { createClient } from "@/lib/supabase/server"
 
+const TEXT_CLASS = "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-xl font-medium px-8 py-3 rounded-md"
+
 export default async function AuthButton() {
   const supabase = createClient()
 
@@ -24,10 +26,12 @@ export default async function AuthButton() {
   }
 
   return user ? (
-    <div className="flex items-center gap-4">
-      <span className="text-xl font-bold text-zinc-300">{profile?.full_name ?? user.email}</span>
+    <div className="flex items-center gap-2">
+      <Link href="/protected" className={TEXT_CLASS}>
+        {profile?.full_name ?? user.email}
+      </Link>
       <form action={signOut}>
-        <button className="bg-red-900 rounded-md text-l px-5 py-2 text-white font-semibold">
+        <button className="bg-[#5C1A1A] hover:bg-[#7A2323] transition-colors rounded-md text-xl px-5 py-2 text-[#EDE6DA] font-semibold ml-2">
           Logout
         </button>
       </form>

@@ -1,26 +1,9 @@
-import Footer from "@/components/Footer"
 import MonkeyMath from "@/components/MonkeyMath"
-import { createClient } from "@/lib/supabase/server"
 
-import Navbar from "../components/Navbar"
-
-export default async function Index() {
-  const canInitSupabaseClient = () => {
-    try {
-      createClient()
-      return true
-    } catch (_e) {
-      return false
-    }
-  }
-
-  const isSupabaseConnected = canInitSupabaseClient()
-
+export default function Index() {
   return (
-    <div className="flex flex-1 w-full flex-col items-center justify-between bg-background px-10 py-6">
-      <Navbar isSupabaseConnected={isSupabaseConnected} />
+    <div className="flex flex-1 w-full flex-col items-center justify-center">
       <MonkeyMath />
-      <Footer />
     </div>
   )
 }

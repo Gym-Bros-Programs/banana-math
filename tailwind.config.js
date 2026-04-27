@@ -31,14 +31,14 @@ module.exports = {
       },
       keyframes: {
         "flash-green": {
-          "0%": { backgroundColor: "transparent" },
-          "50%": { backgroundColor: "green" },
-          "100%": { backgroundColor: "transparent" }
+          "0%": { backgroundColor: "transparent", color: "black" },
+          "50%": { backgroundColor: "green", color: "white" },
+          "100%": { backgroundColor: "transparent", color: "black" }
         },
         "flash-red": {
-          "0%": { backgroundColor: "transparent" },
-          "50%": { backgroundColor: "red" },
-          "100%": { backgroundColor: "transparent" }
+          "0%": { backgroundColor: "transparent", color: "black" },
+          "50%": { backgroundColor: "red", color: "white" },
+          "100%": { backgroundColor: "transparent", color: "black" }
         }
       }
     }

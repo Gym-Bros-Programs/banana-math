@@ -3,7 +3,7 @@
 import React from "react"
 
 const Footer = () => (
-  <footer className="mt-8 flex w-full items-center justify-between text-sm text-muted">
+  <footer className="flex w-full items-center justify-between text-sm text-muted">
     <div className="flex space-x-2">
       <a href="https://mail.google.com/" target="_blank">
         <button>Contact</button>
