@@ -3,85 +3,202 @@
 import { revalidatePath } from "next/cache"
 
 import { createClient } from "@/lib/supabase/server"
+import { generateLocalQuestionPool } from "@/lib/questions/arithmetic-generator"
+import type { Difficulty } from "@/lib/questions/arithmetic-generator"
+import type { SessionConfig, Question, QuestionSubType } from "@/lib/types/database"
 
-export async function createAttempt() {
+// Fetch a deduplicated question pool for a session
+export async function getQuestionsForSession(config: SessionConfig, difficulty: Difficulty = "Easy"): Promise<Question[]> {
   const supabase = createClient()
+
+  // Pool size: for timed sessions fetch generously; for fixed fetch exact count
+  const poolSize =
+    config.sessionMode === "fixed"
+      ? (config.questionLimit ?? 20)
+      : Math.max(50, (config.durationSeconds ?? 60) * 2) // ~2 questions per second max
+
+  const sortedOperatorSet = [...config.operatorSet].sort() as QuestionSubType[]
+
+  const { data, error } = await supabase.rpc("get_questions_for_session", {
+    p_category: config.category,
+    p_operator_set: sortedOperatorSet,
+    p_allow_negatives: config.allowNegatives,
+    p_limit: poolSize,
+  })
+
+  if (error || !data || data.length === 0) {
+    console.warn("DB unavailable — using local generator:", error?.message)
+    return getFallbackQuestions(config, difficulty)
+  }
+
+  return data as Question[]
+}
+
+// Create a new session record (called on completion)
+export async function createSession(
+  config: SessionConfig,
+  correctCount: number,
+  totalCount: number
+): Promise<string> {
+  const supabase = createClient()
+
   const {
-    data: { user }
+    data: { user },
   } = await supabase.auth.getUser()
 
-  const userId = user ? user.id : null
+  const accuracy = totalCount > 0 ? (correctCount / totalCount) * 100 : 0
+  const sortedOperatorSet = [...config.operatorSet].sort()
 
   const { data, error } = await supabase
-    .from("attempts")
-    .insert({ user_id: userId })
+    .from("sessions")
+    .insert({
+      user_id: user?.id ?? null,
+      category: config.category,
+      operator_set: sortedOperatorSet,
+      allow_negatives: config.allowNegatives,
+      session_mode: config.sessionMode,
+      duration_seconds: config.durationSeconds ?? null,
+      question_limit: config.questionLimit ?? null,
+      correct_count: correctCount,
+      total_count: totalCount,
+      accuracy: parseFloat(accuracy.toFixed(2)),
+      is_leaderboard_eligible: isLeaderboardEligible(config),
+    })
     .select("id")
     .single()
 
   if (error || !data) {
-    console.error("Error creating attempt, falling back to mock ID:", error)
-    return "mock-attempt-id"
+    console.error("Error creating session, using mock:", error)
+    return "mock-session-id"
   }
+
+  // Compute and store percentile asynchronously (don't block the response)
+  updateSessionPercentile(data.id).catch(console.error)
+  revalidatePath("/attempts")
+
   return data.id
 }
 
-export async function addUserAnswer(payload: {
-  attemptId: string
-  questionId: string | null
-  submittedAnswer: string
-  isCorrect: boolean
-}) {
-  const { attemptId, questionId, submittedAnswer, isCorrect } = payload
+// Save answer records for a session in bulk
+export async function saveSessionAnswers(
+  sessionId: string,
+  answers: Array<{
+    questionId: string
+    userAnswer: string
+    isCorrect: boolean
+    timeTakenMs: number
+    orderInSession: number
+  }>
+): Promise<void> {
+  if (sessionId === "mock-session-id") return
+
   const supabase = createClient()
 
-  const { error } = await supabase.from("user_answers").insert({
-    attempt_id: attemptId,
-    question_id: questionId,
-    submitted_answer: submittedAnswer,
-    is_correct: isCorrect
+  const rows = answers.map((a) => ({
+    session_id: sessionId,
+    question_id: a.questionId,
+    user_answer: a.userAnswer,
+    is_correct: a.isCorrect,
+    time_taken_ms: a.timeTakenMs,
+    order_in_session: a.orderInSession,
+  }))
+
+  const { error } = await supabase.from("session_answers").insert(rows)
+
+  if (error) {
+    console.error("Error saving session answers:", error)
+  }
+}
+
+// Internal helper to update percentile rank
+async function updateSessionPercentile(sessionId: string): Promise<void> {
+  const supabase = createClient()
+
+  const { data: percentile, error } = await supabase.rpc("calculate_session_percentile", {
+    p_session_id: sessionId,
   })
 
   if (error) {
-    console.error("Error adding user answer:", error)
+    console.error("Error calculating percentile:", error)
+    return
   }
+
+  await supabase.from("sessions").update({ percentile }).eq("id", sessionId)
 }
 
-export async function finishAttempt(payload: {
-  attemptId: string
-  correctCount: number
-  totalCount: number
-}) {
-  const { attemptId, correctCount, totalCount } = payload
+// Retrieve session history for the authenticated user
+export async function getUserSessions(): Promise<any[]> {
   const supabase = createClient()
 
-  const percentage = totalCount > 0 ? (correctCount / totalCount) * 100 : 0
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const { error } = await supabase
-    .from("attempts")
-    .update({
-      correct_count: correctCount,
-      total_count: totalCount,
-      percentage: percentage.toFixed(2)
-    })
-    .eq("id", attemptId)
+  if (!user) return getMockSessions()
 
-  if (error) {
-    console.error("Error finishing attempt (mocking success):", error)
+  const { data, error } = await supabase
+    .from("sessions")
+    .select(`
+      *,
+      session_answers (
+        *,
+        question:questions (*)
+      )
+    `)
+    .eq("user_id", user.id)
+    .order("completed_at", { ascending: false })
+    .limit(50)
+
+  if (error || !data) {
+    console.error("Error fetching sessions:", error)
+    return getMockSessions()
   }
-  revalidatePath("/attempts")
+
+  return data
 }
 
-export async function getRandomQuestion() {
-  const supabase = createClient()
-  const { data, error } = await supabase.rpc("get_random_question")
+// Check if a session's configuration is eligible for the global leaderboard
+const STANDARD_PRESETS: string[][] = [
+  ["addition", "division", "multiplication", "subtraction"], // all 4
+  ["addition", "subtraction"],                               // +- only
+  ["division", "multiplication"],                            // */ only
+  ["addition"],
+  ["subtraction"],
+  ["multiplication"],
+  ["division"],
+]
 
-  if (error || !data || data.length === 0) {
-    console.error("Error fetching random question, using fallback:", error)
-    return {
-      id: "fallback-id-1",
-      question_text: "2 + 2 = ?",
-      correct_answer: "4"
-    }
-  }
-  return data[0]
+function isLeaderboardEligible(config: SessionConfig): boolean {
+  const sorted = [...config.operatorSet].sort().join(",")
+  return STANDARD_PRESETS.some((p) => p.slice().sort().join(",") === sorted)
+}
+
+// Helpers and Mock data
+function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "Easy"): Question[] {
+  // Generates a real playable pool locally — game works without any DB connection
+  const poolSize =
+    config.sessionMode === "fixed"
+      ? (config.questionLimit ?? 20)
+      : Math.max(60, (config.durationSeconds ?? 60) * 2)
+  return generateLocalQuestionPool(config, poolSize, difficulty)
+}
+
+function getMockSessions(): any[] {
+  return [
+    {
+      id: "mock-1",
+      category: "arithmetic",
+      operator_set: ["addition", "subtraction"],
+      allow_negatives: false,
+      session_mode: "timed",
+      duration_seconds: 60,
+      question_limit: null,
+      correct_count: 12,
+      total_count: 15,
+      accuracy: 80,
+      percentile: 72.5,
+      completed_at: new Date().toISOString(),
+      session_answers: [],
+    },
+  ]
 }

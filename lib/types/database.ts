@@ -1,118 +1,189 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
+// ─── Domain types ──────────────────────────────────────────────────────────
+
+export type QuestionCategory = "arithmetic" | "algebra" | "trig"
+export type QuestionSubType =
+  | "addition"
+  | "subtraction"
+  | "multiplication"
+  | "division"
+  | "decimal"
+  | "fraction"
+  | "exponent"
+  | "linear"
+  | "quadratic"
+
+export type SessionMode = "timed" | "fixed"
+
+export type OperatorPreset = "all" | "add_sub" | "mul_div" | "addition" | "subtraction" | "multiplication" | "division" | "custom"
+
+// ─── Guest storage ─────────────────────────────────────────────────────────────
+
+/** Max sessions stored in localStorage for guests before old ones are pruned */
+export const GUEST_SESSION_LIMIT = 3
+
+// ─── Row types ─────────────────────────────────────────────────────────────
+
+export interface Profile {
+  id: string
+  username: string
+  display_name: string | null
+  created_at: string
+}
+
+export interface Question {
+  id: string
+  category: QuestionCategory
+  sub_type: QuestionSubType
+  operand_a: number | null
+  operand_b: number | null
+  operator: string | null
+  question_text: string
+  correct_answer: string
+  has_negatives: boolean
+  difficulty: number
+  created_at: string
+}
+
+export interface Session {
+  id: string
+  user_id: string | null
+  category: QuestionCategory
+  operator_set: QuestionSubType[]
+  allow_negatives: boolean
+  session_mode: SessionMode
+  duration_seconds: number | null
+  question_limit: number | null
+  correct_count: number
+  total_count: number
+  accuracy: number
+  percentile: number | null
+  is_leaderboard_eligible: boolean
+  completed_at: string
+}
+
+export interface SessionAnswer {
+  id: string
+  session_id: string
+  question_id: string
+  user_answer: string
+  is_correct: boolean
+  time_taken_ms: number | null
+  order_in_session: number
+  answered_at: string
+}
+
+// ─── Joined types (for UI rendering) ───────────────────────────────────────
+
+export interface SessionAnswerWithQuestion extends SessionAnswer {
+  question: Question
+}
+
+export interface SessionWithAnswers extends Session {
+  session_answers: SessionAnswerWithQuestion[]
+}
+
+// ─── Session config (what the user picks before starting) ──────────────────
+
+export interface SessionConfig {
+  category: QuestionCategory
+  operatorSet: QuestionSubType[]
+  allowNegatives: boolean
+  sessionMode: SessionMode
+  durationSeconds?: number   // for timed
+  questionLimit?: number     // for fixed
+}
+
+// ─── Operator preset helpers ───────────────────────────────────────────────
+
+export const OPERATOR_PRESETS: Record<OperatorPreset, QuestionSubType[]> = {
+  all:            ["addition", "subtraction", "multiplication", "division"],
+  add_sub:        ["addition", "subtraction"],
+  mul_div:        ["multiplication", "division"],
+  addition:       ["addition"],
+  subtraction:    ["subtraction"],
+  multiplication: ["multiplication"],
+  division:       ["division"],
+  custom:         [], // populated by user
+}
+
+export const PRESET_LABELS: Record<OperatorPreset, string> = {
+  all:            "All 4 operations",
+  add_sub:        "+ and − only",
+  mul_div:        "× and ÷ only",
+  addition:       "Addition only",
+  subtraction:    "Subtraction only",
+  multiplication: "Multiplication only",
+  division:       "Division only",
+  custom:         "Custom",
+}
+
+/** These presets are leaderboard-eligible; custom combos or advanced types are not */
+export const LEADERBOARD_PRESETS: OperatorPreset[] = [
+  "all", "add_sub", "mul_div", "addition", "subtraction", "multiplication", "division",
+]
+
+// ─── Supabase Database type (for typed client) ─────────────────────────────
+
 export type Database = {
   public: {
     Tables: {
-      entries: {
-        Row: {
-          correct_count: number | null
-          created_at: string
-          id: string
-          total_count: number | null
-          username: string | null
-        }
-        Insert: {
-          correct_count?: number | null
-          created_at?: string
-          id?: string
-          total_count?: number | null
-          username?: string | null
-        }
-        Update: {
-          correct_count?: number | null
-          created_at?: string
-          id?: string
-          total_count?: number | null
-          username?: string | null
-        }
+      profiles: {
+        Row: Profile
+        Insert: Omit<Profile, "created_at"> & { created_at?: string }
+        Update: Partial<Omit<Profile, "id">>
         Relationships: []
       }
+      questions: {
+        Row: Question
+        Insert: Omit<Question, "id" | "created_at"> & { id?: string; created_at?: string }
+        Update: Partial<Omit<Question, "id">>
+        Relationships: []
+      }
+      sessions: {
+        Row: Session
+        Insert: Omit<Session, "id" | "completed_at"> & { id?: string; completed_at?: string }
+        Update: Partial<Omit<Session, "id">>
+        Relationships: []
+      }
+      session_answers: {
+        Row: SessionAnswer
+        Insert: Omit<SessionAnswer, "id" | "answered_at"> & { id?: string; answered_at?: string }
+        Update: Partial<Omit<SessionAnswer, "id">>
+        Relationships: [
+          {
+            foreignKeyName: "session_answers_session_id_fkey"
+            columns: ["session_id"]
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_answers_question_id_fkey"
+            columns: ["question_id"]
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
-    Views: {
-      [_ in never]: never
-    }
+    Views: { [_ in never]: never }
     Functions: {
-      [_ in never]: never
+      get_questions_for_session: {
+        Args: {
+          p_category: string
+          p_operator_set: string[]
+          p_allow_negatives: boolean
+          p_limit: number
+        }
+        Returns: Question[]
+      }
+      calculate_session_percentile: {
+        Args: { p_session_id: string }
+        Returns: number
+      }
     }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
   }
 }
-
-type PublicSchema = Database[Extract<keyof Database, "public">]
-
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] & PublicSchema["Views"])
-    ? (PublicSchema["Tables"] & PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  PublicTableNameOrOptions extends keyof PublicSchema["Tables"] | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  PublicTableNameOrOptions extends keyof PublicSchema["Tables"] | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
-    : never = never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  PublicEnumNameOrOptions extends keyof PublicSchema["Enums"] | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
-    : never = never
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-    : never

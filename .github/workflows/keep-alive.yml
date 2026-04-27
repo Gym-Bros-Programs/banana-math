@@ -1,0 +1,46 @@
+# .github/workflows/keep-alive.yml
+#
+# Pings the Supabase database every 4 days so the free-tier project
+# never hits the 7-day inactivity threshold and gets paused.
+#
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   NEXT_PUBLIC_SUPABASE_URL   — your project URL
+#   SUPABASE_SERVICE_KEY       — service_role key (not anon key)
+
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs at 08:00 UTC on Monday, Wednesday, Friday (every ~2-3 days)
+    - cron: "0 8 * * 1,3,5"
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase database
+        run: |
+          echo "Pinging Supabase at $SUPABASE_URL..."
+
+          RESPONSE=$(curl --silent --write-out "\n%{http_code}" \
+            --request GET \
+            "$SUPABASE_URL/rest/v1/attempts?select=id&limit=1" \
+            --header "apikey: $SUPABASE_KEY" \
+            --header "Authorization: Bearer $SUPABASE_KEY")
+
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ Database is alive."
+          else
+            echo "⚠️  Unexpected status $HTTP_STATUS — database may be paused."
+            exit 1
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

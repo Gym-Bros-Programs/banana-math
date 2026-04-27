@@ -4,7 +4,7 @@ import React from "react"
 
 const Footer = () => (
   <footer className="flex w-full items-center justify-between text-sm text-muted">
-    <div className="flex space-x-2">
+    <div className="flex space-x-8">
       <a href="https://mail.google.com/" target="_blank">
         <button>Contact</button>
       </a>

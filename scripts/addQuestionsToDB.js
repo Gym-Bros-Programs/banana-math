@@ -1,79 +1,89 @@
-// Usage: node scripts/addQuestionsToDB.js scripts/testquestion.json
+/**
+ * addQuestionsToDB.js
+ * Uploads a generated questions JSON file to the Supabase questions table.
+ *
+ * Usage:
+ *   node scripts/addQuestionsToDB.js scripts/arithmetic_questions.json
+ *
+ * Required in .env.local:
+ *   NEXT_PUBLIC_SUPABASE_URL=
+ *   SUPABASE_SERVICE_KEY=   (service_role key — bypasses RLS)
+ */
 
 const { createClient } = require("@supabase/supabase-js")
-const fs = require("fs")
+const fs   = require("fs")
 const path = require("path")
 
-// Load environment variables from .env.local file
 require("dotenv").config({ path: path.resolve(process.cwd(), ".env.local") })
 
-// The script now reads these values from your .env.local file.
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_URL     = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
+const BATCH_SIZE       = 500
 
-// Function to read and parse the JSON data file
 function loadQuestions(filename) {
-  try {
-    const jsonPath = path.resolve(process.cwd(), filename)
-    console.log(`Attempting to read questions from: ${jsonPath}`)
-    if (!fs.existsSync(jsonPath)) {
-      console.error(`Error: File not found at ${jsonPath}`)
-      return null
-    }
-    const fileContent = fs.readFileSync(jsonPath, "utf8")
-    const questions = JSON.parse(fileContent)
-    console.log(`Successfully loaded ${questions.length} questions from ${filename}.`)
-    return questions
-  } catch (error) {
-    console.error(`Error reading or parsing ${filename}:`, error.message)
-    return null
+  const jsonPath = path.resolve(process.cwd(), filename)
+  if (!fs.existsSync(jsonPath)) {
+    console.error(`❌ File not found: ${jsonPath}`)
+    process.exit(1)
   }
+  const questions = JSON.parse(fs.readFileSync(jsonPath, "utf8"))
+  console.log(`Loaded ${questions.length.toLocaleString()} questions from ${filename}`)
+  return questions
 }
 
-// Main async function to upload the data
-async function uploadData() {
-  // Get the filename from the command-line arguments
-  const filename = process.argv[2]
-
-  if (!filename) {
-    console.error("Error: Please provide the JSON filename as an argument.")
-    console.log("Usage: node seed.js <your_file.json>")
-    return
-  }
-
-  // Check if credentials are loaded
+async function uploadQuestions(questions) {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-    console.error(
-      "Error: Make sure SUPABASE_URL and SUPABASE_SERVICE_KEY are set in your .env.local file."
-    )
-    return
+    console.error("❌ Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_KEY in .env.local")
+    process.exit(1)
   }
 
-  // Load the questions from the specified file
-  const questionsToUpload = loadQuestions(filename)
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+    auth: { persistSession: false },
+  })
 
-  if (!questionsToUpload || questionsToUpload.length === 0) {
-    console.log("No valid questions found to upload. Exiting.")
-    return
-  }
+  console.log("\nUploading to Supabase questions table...")
+  let inserted = 0
+  let skipped  = 0
 
-  console.log("Initializing Supabase client...")
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  for (let i = 0; i < questions.length; i += BATCH_SIZE) {
+    const batch = questions.slice(i, i + BATCH_SIZE)
 
-  console.log("Starting upload...")
-  try {
-    const { data, error } = await supabase.from("questions").insert(questionsToUpload).select()
+    const { data, error } = await supabase
+      .from("questions")
+      .upsert(batch, {
+        onConflict: "operand_a,operand_b,operator", // matches UNIQUE constraint
+        ignoreDuplicates: true,
+      })
+      .select("id")
 
     if (error) {
-      console.error("Error uploading questions:", error.message)
-      return
+      console.error(`\n❌ Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`, error.message)
+    } else {
+      inserted += data?.length ?? 0
+      skipped  += batch.length - (data?.length ?? 0)
     }
 
-    console.log(`\n✅ Successfully uploaded ${data.length} questions!`)
-    console.log("A sample of uploaded data:", data[0])
-  } catch (err) {
-    console.error("An unexpected error occurred during the upload:", err)
+    const pct = Math.round(((i + batch.length) / questions.length) * 100)
+    process.stdout.write(`  ${pct}% (${i + batch.length}/${questions.length})...\r`)
   }
+
+  console.log(`\n\n✅ Done!`)
+  console.log(`   Inserted : ${inserted.toLocaleString()}`)
+  console.log(`   Skipped  : ${skipped.toLocaleString()} (already existed)\n`)
 }
 
-uploadData()
+async function main() {
+  const filename = process.argv[2]
+  if (!filename) {
+    console.error("Usage: node scripts/addQuestionsToDB.js <questions.json>")
+    process.exit(1)
+  }
+
+  const questions = loadQuestions(filename)
+  await uploadQuestions(questions)
+}
+
+main().catch((err) => {
+  console.error("\n💥 Fatal:", err)
+  process.exit(1)
+})
