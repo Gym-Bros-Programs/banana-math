@@ -31,6 +31,17 @@ export const createClient = () => {
 
   const cookieStore = cookies()
 
+  const isMockSessionActive = () => {
+    try {
+      const cookieVal = cookieStore.get("mock_session_active")?.value
+      if (cookieVal === "false") return false
+      if (cookieVal === "true") return true
+    } catch {}
+    return MOCK_AUTH
+  }
+
+  const mockUser = { id: "mock-user-id", email: "dev@local.test" }
+
   // ── Mode 1 or 2 mock DB: no real Supabase client at all ──────────────────────
   if (MOCK_DB || !HAS_DB) {
     const MOCK_DB_FILE = path.join(os.tmpdir(), "banana_math_mock_db.json")
@@ -159,9 +170,24 @@ export const createClient = () => {
     return {
       auth: {
         getUser: async () => ({
-          data: { user: MOCK_AUTH ? { id: "mock-user-id", email: "dev@local.test" } : null },
+          data: { user: isMockSessionActive() ? mockUser : null },
           error: null,
         }),
+        signOut: async () => {
+          try { cookieStore.set("mock_session_active", "false") } catch {}
+          return { error: null }
+        },
+        signInWithPassword: async ({ email, password }: any) => {
+          if ((email !== "a@a.a" && email !== "a") || password !== "123456") {
+            return { data: null, error: { message: "Invalid login credentials (use a@a.a or 'a' / 123456)" } }
+          }
+          try { cookieStore.set("mock_session_active", "true") } catch {}
+          return { data: { user: mockUser }, error: null }
+        },
+        signUp: async () => {
+          try { cookieStore.set("mock_session_active", "true") } catch {}
+          return { data: { user: mockUser }, error: null }
+        }
       },
       from:  () => mockQueryBuilder,
       // rpc returns error → game-actions falls back to local generator
@@ -189,16 +215,26 @@ export const createClient = () => {
   )
 
   if (MOCK_AUTH) {
-    return {
-      ...realClient,
-      auth: {
-        ...realClient.auth,
-        getUser: async () => ({
-          data: { user: { id: "mock-user-id", email: "dev@local.test" } },
-          error: null,
-        }),
-      },
-    } as any
+    realClient.auth.getUser = async () => ({
+      data: { user: isMockSessionActive() ? mockUser : null },
+      error: null,
+    }) as any
+    realClient.auth.signOut = async () => {
+      try { cookieStore.set("mock_session_active", "false") } catch {}
+      return { error: null }
+    }
+    realClient.auth.signInWithPassword = async ({ email, password }: any) => {
+      if ((email !== "a@a.a" && email !== "a") || password !== "123456") {
+        return { data: null, error: { message: "Invalid login credentials (use a@a.a or 'a' / 123456)" } } as any
+      }
+      try { cookieStore.set("mock_session_active", "true") } catch {}
+      return { data: { user: mockUser }, error: null } as any
+    }
+    realClient.auth.signUp = async () => {
+      try { cookieStore.set("mock_session_active", "true") } catch {}
+      return { data: { user: mockUser }, error: null } as any
+    }
+    return realClient
   }
 
   // ── Mode 3 / 4: real client, real auth ───────────────────────────────────────

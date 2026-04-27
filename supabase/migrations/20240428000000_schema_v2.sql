@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   correct_count    integer NOT NULL DEFAULT 0,
   total_count      integer NOT NULL DEFAULT 0,
   accuracy         numeric NOT NULL DEFAULT 0,  -- 0-100
+  cqpm             numeric NOT NULL DEFAULT 0,
   percentile       numeric,                     -- 0-100, computed at session end
   is_leaderboard_eligible boolean NOT NULL DEFAULT false, -- true only for standard preset combos
   completed_at     timestamptz NOT NULL DEFAULT timezone('utc', now())

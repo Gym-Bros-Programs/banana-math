@@ -64,6 +64,9 @@ export async function createSession(
       correct_count: correctCount,
       total_count: totalCount,
       accuracy: parseFloat(accuracy.toFixed(2)),
+      cqpm: (finalTime ?? config.durationSeconds) 
+        ? parseFloat((correctCount / ((finalTime ?? config.durationSeconds ?? 60) / 60)).toFixed(1)) 
+        : 0,
       is_leaderboard_eligible: isLeaderboardEligible(config),
       difficulty: difficulty,
     })
@@ -178,6 +181,24 @@ function isLeaderboardEligible(config: SessionConfig): boolean {
 
 // Helpers and Mock data
 function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "Easy"): Question[] {
+  // If in UI testing mode, just return bare minimum 1+1=2 questions
+  if (process.env.NEXT_PUBLIC_MOCK_DB === "true") {
+    const poolSize = config.sessionMode === "fixed" ? (config.questionLimit ?? 20) : 100
+    return Array(poolSize).fill(null).map((_, i) => ({
+      id: `mock-q-${i}`,
+      category: "arithmetic",
+      sub_type: "addition",
+      operand_a: 1,
+      operand_b: 1,
+      operator: "+",
+      question_text: "1 + 1 = ?",
+      correct_answer: "2",
+      has_negatives: false,
+      difficulty: 1,
+      created_at: new Date().toISOString()
+    }))
+  }
+
   // Generates a real playable pool locally — game works without any DB connection
   const poolSize =
     config.sessionMode === "fixed"

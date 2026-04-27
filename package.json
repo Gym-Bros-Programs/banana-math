@@ -1,7 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/start-ui.js",
+    "dev:db": "node scripts/start-db.js",
+    "db:start": "npx supabase start",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --fix && prettier --write .",

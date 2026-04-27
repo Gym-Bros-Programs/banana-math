@@ -58,6 +58,7 @@ export interface Session {
   correct_count: number
   total_count: number
   accuracy: number
+  cqpm: number
   percentile: number | null
   is_leaderboard_eligible: boolean
   difficulty: string | null

@@ -30,9 +30,9 @@ export default async function AttemptHistory({
   const timeframeFilter = searchParams.timeframe
 
   let query = supabase
-    .from("entries")
-    .select("*")
-    .order("percentage", { ascending: false })
+    .from("sessions")
+    .select("*, profiles(username)")
+    .order("cqpm", { ascending: false })
 
   if (modeFilter) query = query.eq("session_mode", modeFilter)
   if (diffFilter) query = query.eq("difficulty", diffFilter)
@@ -51,10 +51,7 @@ export default async function AttemptHistory({
   let { data: leaderboard, error } = await query
 
   if (error || !leaderboard) {
-    leaderboard = [
-      { user_email: "expert@math.ninja", percentage: 100, created_at: new Date(Date.now() - 3600000).toISOString(), _primaryScore: 100 },
-      { user_email: "demo@local.test", percentage: 95, created_at: new Date(Date.now() - 7200000).toISOString(), _primaryScore: 95 },
-    ]
+    leaderboard = []
   }
 
   // Find user's best entry and rank
@@ -170,10 +167,10 @@ export default async function AttemptHistory({
                       #{index + 1}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-[#EDE6DA]">
-                      {entry.user_email} {isUser && "(You)"}
+                      {entry.profiles?.username || entry.user_email || "Guest"} {isUser && "(You)"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-lg text-[hsl(50,100%,52%)]">
-                      {entry.percentage}
+                      {entry.cqpm ?? 0} CQPM <span className="text-sm text-[#C8BCAD]">({entry.percentage ?? entry.accuracy}%)</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD]">
                       {new Date(entry.created_at).toLocaleDateString()}
@@ -205,7 +202,7 @@ export default async function AttemptHistory({
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest text-[#C8BCAD] font-bold">Best Entry</span>
             <span className="text-xl font-medium text-[#EDE6DA]">
-              {userEntry ? userEntry.percentage : "No attempts"}
+              {userEntry ? `${userEntry.cqpm ?? 0} CQPM` : "No attempts"}
             </span>
           </div>
         </div>

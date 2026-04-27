@@ -59,28 +59,7 @@ export default async function AttemptHistory({
     }
   }
 
-  // Mock data fallback if no real sessions
-  if (sessions.length === 0 && !user) {
-    sessions = [
-      {
-        id: "mock-1",
-        user_id: "mock-id",
-        category: "arithmetic",
-        operator_set: ["addition", "subtraction"],
-        allow_negatives: false,
-        session_mode: "timed",
-        difficulty: "Medium",
-        duration_seconds: 60,
-        question_limit: null,
-        correct_count: 12,
-        total_count: 15,
-        accuracy: 80,
-        percentile: 72.5,
-        completed_at: new Date().toISOString(),
-        session_answers: [],
-      },
-    ] as unknown as SessionWithAnswers[]
-  }
+  // Mock data fallback is handled directly in server.ts when MOCK_DB is true
 
   // Client-side filter for mock data (when user is null/mock)
   if (modeFilter || diffFilter || durationFilter || questionsFilter) {
@@ -193,6 +172,9 @@ export default async function AttemptHistory({
                               negatives
                             </span>
                           )}
+                          <span className="text-[hsl(50,100%,52%)] text-sm font-medium ml-2">
+                            {session.cqpm ?? 0} CQPM
+                          </span>
                         </div>
                         <div className="text-sm text-[#C8BCAD]">
                           {session.correct_count}/{session.total_count} correct
