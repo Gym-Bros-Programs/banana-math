@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 
-export type Mode =
+export type Type =
   | "+ − × ÷"
   | "+ −"
   | "× ÷"
@@ -11,22 +11,22 @@ export type Mode =
   | "÷ only"
 
 export type Difficulty = "Easy" | "Medium" | "Hard"
-export type SessionMode = "seconds" | "questions"
+export type Mode = "timed" | "question based"
 
-const MODES: Mode[]             = ["+ − × ÷", "+ −", "× ÷", "+ only", "− only", "× only", "÷ only"]
+const TYPES: Type[]             = ["+ − × ÷", "+ −", "× ÷", "+ only", "− only", "× only", "÷ only"]
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"]
 const SECONDS_OPTIONS          = [15, 30, 60, 120]
 const QUESTIONS_OPTIONS        = [10, 20, 50, 100]
 
 type ControlBarProps = {
-  selectedMode:       Mode
-  onModeChange:       (mode: Mode) => void
+  selectedType:       Type
+  onTypeChange:       (t: Type) => void
   selectedDifficulty: Difficulty
   onDifficultyChange: (d: Difficulty) => void
-  selectedTime:       number
-  onTimeChange:       (time: number) => void
-  sessionMode:        SessionMode
-  onSessionModeChange:(m: SessionMode) => void
+  selectedLength:     number
+  onLengthChange:     (length: number) => void
+  selectedMode:       Mode
+  onModeChange:       (m: Mode) => void
 }
 
 function VerticalPicker<T extends string>({
@@ -77,10 +77,10 @@ function VerticalPicker<T extends string>({
 }
 
 export default function ControlBar({
-  selectedMode, onModeChange,
+  selectedType, onTypeChange,
   selectedDifficulty, onDifficultyChange,
-  selectedTime, onTimeChange,
-  sessionMode, onSessionModeChange,
+  selectedLength, onLengthChange,
+  selectedMode, onModeChange,
 }: ControlBarProps) {
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const settingsRef = React.useRef<HTMLDivElement>(null)
@@ -94,18 +94,18 @@ export default function ControlBar({
     return () => document.removeEventListener("mousedown", handle)
   }, [])
 
-  const timeOptions = sessionMode === "seconds" ? SECONDS_OPTIONS : QUESTIONS_OPTIONS
+  const lengthOptions = selectedMode === "timed" ? SECONDS_OPTIONS : QUESTIONS_OPTIONS
 
-  // If current selectedTime isn't in the new set, auto-pick the first option
+  // If current selectedLength isn't in the new set, auto-pick the first option
   React.useEffect(() => {
-    if (!timeOptions.includes(selectedTime)) onTimeChange(timeOptions[0])
-  }, [sessionMode])
+    if (!lengthOptions.includes(selectedLength)) onLengthChange(lengthOptions[0])
+  }, [selectedMode])
 
   return (
     <div className="relative flex items-center justify-center gap-8 w-[850px] h-[140px] px-10 py-6 rounded-2xl text-sm font-medium text-muted bg-foreground/30 shadow-lg">
 
-      {/* Mode Picker */}
-      <VerticalPicker options={MODES} selected={selectedMode} onChange={onModeChange} />
+      {/* Type Picker */}
+      <VerticalPicker options={TYPES} selected={selectedType} onChange={onTypeChange} />
 
       <div className="w-1 h-16 bg-foreground mx-2 rounded-full" />
 
@@ -114,12 +114,12 @@ export default function ControlBar({
 
       <div className="w-1 h-16 bg-foreground mx-2 rounded-full" />
 
-      {/* Time / Question count buttons */}
+      {/* Length count buttons */}
       <div className="flex items-center gap-4">
-        {timeOptions.map((val) => (
-          <button key={val} onClick={() => onTimeChange(val)}
+        {lengthOptions.map((val) => (
+          <button key={val} onClick={() => onLengthChange(val)}
             className={`px-3 py-1.5 text-4xl font-bold rounded-full transition-all duration-150 ${
-              selectedTime === val ? "text-[hsl(50,100%,52%)]" : "text-muted hover:text-[hsl(50,100%,52%)]"
+              selectedLength === val ? "text-[hsl(50,100%,52%)]" : "text-muted hover:text-[hsl(50,100%,52%)]"
             }`}>
             {val}
           </button>
@@ -146,16 +146,16 @@ export default function ControlBar({
         {/* Settings dropdown */}
         {settingsOpen && (
           <div className="absolute top-0 left-full ml-3 w-56 bg-[#17150F] border border-[#2C2920] rounded-xl p-4 shadow-2xl z-50 flex flex-col gap-3">
-            <p className="text-xs text-[#C8BCAD] font-semibold uppercase tracking-wider">Session type</p>
+            <p className="text-xs text-[#C8BCAD] font-semibold uppercase tracking-wider">Mode</p>
             <div className="flex gap-2">
-              {(["seconds", "questions"] as SessionMode[]).map((m) => (
-                <button key={m} onClick={() => onSessionModeChange(m)}
+              {(["timed", "question based"] as Mode[]).map((m) => (
+                <button key={m} onClick={() => onModeChange(m)}
                   className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all capitalize ${
-                    sessionMode === m
+                    selectedMode === m
                       ? "bg-[hsl(50,100%,52%)] text-black border-transparent"
                       : "border-[#2C2920] text-[#C8BCAD] hover:border-[hsl(50,100%,52%)]"
                   }`}>
-                  {m === "seconds" ? "Seconds" : "Questions"}
+                  {m === "timed" ? "Timed" : "Questions"}
                 </button>
               ))}
             </div>

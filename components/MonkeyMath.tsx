@@ -4,13 +4,13 @@ import type { ChangeEvent, FormEvent } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import ControlBar from "@/components/ControlBar"
-import type { Mode, Difficulty, SessionMode } from "@/components/ControlBar"
+import type { Type, Mode, Difficulty } from "@/components/ControlBar"
 import { getQuestionsForSession, createSession, saveSessionAnswers } from "@/lib/actions/game-actions"
 import type { Question, SessionConfig, QuestionSubType } from "@/lib/types/database"
 import { GUEST_SESSION_LIMIT } from "@/lib/types/database"
 
-// Mode to operator set mapping
-const MODE_TO_OPS: Record<Mode, QuestionSubType[]> = {
+// Type to operator set mapping
+const TYPE_TO_OPS: Record<Type, QuestionSubType[]> = {
   "+ − × ÷": ["addition", "subtraction", "multiplication", "division"],
   "+ −": ["addition", "subtraction"],
   "× ÷": ["multiplication", "division"],
@@ -43,10 +43,10 @@ function guestCount() {
 
 export default function MonkeyMath() {
   const [phase, setPhase] = useState<GamePhase>("settings")
-  const [selectedMode, setSelectedMode] = useState<Mode>("+ − × ÷")
+  const [selectedType, setSelectedType] = useState<Type>("+ − × ÷")
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("Easy")
-  const [selectedTime, setSelectedTime] = useState(DEFAULT_TIME)
-  const [sessionMode, setSessionMode] = useState<SessionMode>("seconds")
+  const [selectedLength, setSelectedLength] = useState(DEFAULT_TIME)
+  const [selectedMode, setSelectedMode] = useState<Mode>("timed")
 
   const [questionPool, setQuestionPool] = useState<Question[]>([])
   const [poolIndex, setPoolIndex] = useState(0)
@@ -76,7 +76,7 @@ export default function MonkeyMath() {
   const correctCount = answers.filter((a) => a.isCorrect).length
   const totalCount = answers.length
 
-  const activeOps: QuestionSubType[] = MODE_TO_OPS[selectedMode] ?? ["addition"]
+  const activeOps: QuestionSubType[] = TYPE_TO_OPS[selectedType] ?? ["addition"]
 
   // Build session config from current state
   function buildConfig(): SessionConfig {
@@ -84,9 +84,9 @@ export default function MonkeyMath() {
       category: "arithmetic",
       operatorSet: activeOps,
       allowNegatives: false,
-      sessionMode: sessionMode === "seconds" ? "timed" : "fixed",
-      durationSeconds: sessionMode === "seconds" ? selectedTime : undefined,
-      questionLimit: sessionMode === "questions" ? selectedTime : undefined,
+      sessionMode: selectedMode === "timed" ? "timed" : "fixed",
+      durationSeconds: selectedMode === "timed" ? selectedLength : undefined,
+      questionLimit: selectedMode === "question based" ? selectedLength : undefined,
     }
   }
 
@@ -105,7 +105,7 @@ export default function MonkeyMath() {
     let interval: NodeJS.Timeout
     if (timerActive) {
       interval = setInterval(() => {
-        if (sessionMode === "seconds") {
+        if (selectedMode === "timed") {
           setTimeLeft((prev) => {
             if (prev <= 1) {
               setTimerActive(false)
@@ -120,7 +120,7 @@ export default function MonkeyMath() {
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [timerActive, sessionMode])
+  }, [timerActive, selectedMode])
 
   function handleStart() {
     if (activeOps.length === 0) return
@@ -134,8 +134,8 @@ export default function MonkeyMath() {
       setPenaltyCount(0)
       setLastPenalty(null)
 
-      if (sessionMode === "seconds") {
-        setTimeLeft(selectedTime)
+      if (selectedMode === "timed") {
+        setTimeLeft(selectedLength)
       } else {
         setTimeElapsed(0)
       }
@@ -160,7 +160,7 @@ export default function MonkeyMath() {
       setPenaltyCount(newPenaltyCount)
       setLastPenalty(newPenaltyCount)
 
-      if (sessionMode === "seconds") {
+      if (selectedMode === "timed") {
         setTimeLeft(prev => Math.max(0, prev - newPenaltyCount))
       } else {
         setTimeElapsed(prev => prev + newPenaltyCount)
@@ -178,7 +178,7 @@ export default function MonkeyMath() {
     const newAnswers = [...answers, record]
     setAnswers(newAnswers)
 
-    if (sessionMode === "questions" && newAnswers.length >= selectedTime) {
+    if (selectedMode === "question based" && newAnswers.length >= selectedLength) {
       setTimeout(() => handleSessionEnd(newAnswers), 400)
       setIsSubmitting(false); return
     }
@@ -194,7 +194,7 @@ export default function MonkeyMath() {
     const total = finalAnswers.length
     if (total === 0) return
 
-    const finalT = sessionMode === "seconds" ? selectedTime : timeElapsed
+    const finalT = selectedMode === "timed" ? selectedLength : timeElapsed
     const sessionId = await createSession(config, correct, total, finalT, selectedDifficulty)
 
     if (sessionId !== "mock-session-id") {
@@ -208,9 +208,9 @@ export default function MonkeyMath() {
       saveGuestSession({
         id: `guest-${Date.now()}`, category: "arithmetic",
         operator_set: activeOps, allow_negatives: false,
-        session_mode: sessionMode === "seconds" ? "timed" : "fixed",
+        session_mode: selectedMode === "timed" ? "timed" : "fixed",
         duration_seconds: finalT,
-        question_limit: sessionMode === "questions" ? selectedTime : null,
+        question_limit: selectedMode === "question based" ? selectedLength : null,
         correct_count: correct, total_count: total,
         difficulty: selectedDifficulty,
         accuracy: total > 0 ? (correct / total) * 100 : 0,
@@ -222,7 +222,7 @@ export default function MonkeyMath() {
 
   function handleAbandon() {
     setTimerActive(false); setPhase("settings")
-    setAnswers([]); setCurrentQuestion(null); setTimeLeft(selectedTime)
+    setAnswers([]); setCurrentQuestion(null); setTimeLeft(selectedLength)
   }
 
   function handleBackToSettings() {
@@ -245,10 +245,10 @@ export default function MonkeyMath() {
       {phase === "settings" ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-24 w-full">
           <ControlBar
-            selectedMode={selectedMode} onModeChange={setSelectedMode}
+            selectedType={selectedType} onTypeChange={setSelectedType}
             selectedDifficulty={selectedDifficulty} onDifficultyChange={setSelectedDifficulty}
-            selectedTime={selectedTime} onTimeChange={setSelectedTime}
-            sessionMode={sessionMode} onSessionModeChange={setSessionMode}
+            selectedLength={selectedLength} onLengthChange={setSelectedLength}
+            selectedMode={selectedMode} onModeChange={setSelectedMode}
           />
           <button
             onClick={handleStart}
@@ -269,16 +269,16 @@ export default function MonkeyMath() {
           <div className="relative flex-1 flex flex-col items-center justify-center">
             {lastPenalty !== null && (
               <div className="absolute -top-6 text-red-500 font-bold text-2xl animate-float-up pointer-events-none">
-                {sessionMode === "seconds" ? `-${lastPenalty}s` : `+${lastPenalty}s`}
+                {selectedMode === "timed" ? `-${lastPenalty}s` : `+${lastPenalty}s`}
               </div>
             )}
-            <div className={`text-5xl font-bold tracking-widest text-center drop-shadow-md transition-colors duration-300 ${sessionMode === "seconds" && timeLeft <= 5 ? "text-red-500" : "text-btn-background"
+            <div className={`text-5xl font-bold tracking-widest text-center drop-shadow-md transition-colors duration-300 ${selectedMode === "timed" && timeLeft <= 5 ? "text-red-500" : "text-btn-background"
               }`}>
-              {sessionMode === "seconds" ? timeLeft : timeElapsed}s
+              {selectedMode === "timed" ? timeLeft : timeElapsed}s
             </div>
-            {sessionMode === "questions" && (
+            {selectedMode === "question based" && (
               <div className="text-muted text-xs mt-1 uppercase tracking-tighter">
-                {totalCount + 1} / {selectedTime}
+                {totalCount + 1} / {selectedLength}
               </div>
             )}
           </div>

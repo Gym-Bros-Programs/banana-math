@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { createClient } from "@/lib/supabase/server"
+import { OPERATOR_PRESETS, LEADERBOARD_PRESETS } from "@/lib/types/database"
 
 import FilterBar from "@/components/FilterBar"
 
@@ -14,6 +15,7 @@ export default async function AttemptHistory({
   const diffFilter = searchParams.difficulty
   const durationFilter = searchParams.duration
   const questionsFilter = searchParams.questions
+  const operatorFilter = searchParams.operators || "all"
 
   const {
     data: { user },
@@ -37,6 +39,14 @@ export default async function AttemptHistory({
   if (timeframeFilter) query = query.eq("timeframe", timeframeFilter)
   if (durationFilter) query = query.eq("duration_seconds", durationFilter)
   if (questionsFilter) query = query.eq("question_limit", questionsFilter)
+  
+  if (operatorFilter && operatorFilter !== "all") {
+    const ops = OPERATOR_PRESETS[operatorFilter as keyof typeof OPERATOR_PRESETS]
+    if (ops) {
+      // Supabase array filtering: we want exact match for the sorted operator set
+      query = query.eq("operator_set", ops.sort())
+    }
+  }
 
   let { data: leaderboard, error } = await query
 
@@ -69,7 +79,7 @@ export default async function AttemptHistory({
       values: [
         { label: "All", value: "all" },
         { label: "Timed", value: "timed" },
-        { label: "Fixed", value: "fixed" },
+        { label: "Question Based", value: "fixed" },
       ],
     },
     {
@@ -82,11 +92,25 @@ export default async function AttemptHistory({
         { label: "Hard", value: "Hard" },
       ],
     },
+    {
+      label: "Type",
+      key: "operators",
+      type: "dropdown",
+      values: [
+        { label: "All 4", value: "all" },
+        { label: "+ −", value: "add_sub" },
+        { label: "× ÷", value: "mul_div" },
+        { label: "+ only", value: "addition" },
+        { label: "− only", value: "subtraction" },
+        { label: "× only", value: "multiplication" },
+        { label: "÷ only", value: "division" },
+      ],
+    },
   ]
 
   if (modeFilter === "timed") {
     filterOptions.push({
-      label: "Time",
+      label: "Length",
       key: "duration",
       values: [
         { label: "All", value: "all" },
@@ -98,7 +122,7 @@ export default async function AttemptHistory({
     })
   } else if (modeFilter === "fixed") {
     filterOptions.push({
-      label: "Questions",
+      label: "Length",
       key: "questions",
       values: [
         { label: "All", value: "all" },
@@ -187,7 +211,7 @@ export default async function AttemptHistory({
         </div>
         <div className="text-right">
           <span className="text-xs text-[#C8BCAD]">
-            Filtered by: {modeFilter || "All"} · {diffFilter || "All"} · {timeframeFilter || "All Time"}
+            Filtered by: {modeFilter || "All"} · {diffFilter || "All"} · {operatorFilter || "All"} · {timeframeFilter || "All Time"}
           </span>
         </div>
       </div>

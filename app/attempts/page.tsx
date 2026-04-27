@@ -100,7 +100,7 @@ export default async function AttemptHistory({
       values: [
         { label: "All", value: "all" },
         { label: "Timed", value: "timed" },
-        { label: "Fixed", value: "fixed" },
+        { label: "Question Based", value: "fixed" },
       ],
     },
     {
@@ -117,7 +117,7 @@ export default async function AttemptHistory({
 
   if (modeFilter === "timed") {
     filterOptions.push({
-      label: "Time",
+      label: "Length",
       key: "duration",
       values: [
         { label: "All", value: "all" },
@@ -129,7 +129,7 @@ export default async function AttemptHistory({
     })
   } else if (modeFilter === "fixed") {
     filterOptions.push({
-      label: "Questions",
+      label: "Length",
       key: "questions",
       values: [
         { label: "All", value: "all" },
@@ -199,7 +199,7 @@ export default async function AttemptHistory({
                           {" · "}
                           {session.session_mode === "timed"
                             ? `${session.duration_seconds}s`
-                            : `${session.question_limit}Q fixed`}
+                            : `${session.question_limit} questions`}
                           {" · "}
                           {formatDate(session.completed_at)}
                         </div>

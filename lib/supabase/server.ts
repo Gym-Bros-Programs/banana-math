@@ -60,6 +60,7 @@ export const createClient = () => {
       _timeframe: null,
       _durationFilter: null,
       _questionsFilter: null,
+      _operatorFilter: null,
 
       select:  () => mockQueryBuilder,
       limit:   () => mockQueryBuilder,
@@ -78,6 +79,7 @@ export const createClient = () => {
         if (col === "timeframe") mockQueryBuilder._timeframe = val
         if (col === "duration_seconds") mockQueryBuilder._durationFilter = val
         if (col === "question_limit") mockQueryBuilder._questionsFilter = val
+        if (col === "operator_set") mockQueryBuilder._operatorFilter = val
         return mockQueryBuilder
       },
 
@@ -96,6 +98,7 @@ export const createClient = () => {
           const diff = mockQueryBuilder._diffFilter
           const duration = mockQueryBuilder._durationFilter
           const questions = mockQueryBuilder._questionsFilter
+          const operators = mockQueryBuilder._operatorFilter
 
           let filtered = mockSessions.filter((s: any) => {
             if (s.accuracy === 0) return false
@@ -103,6 +106,12 @@ export const createClient = () => {
             if (diff && s.difficulty !== diff) return false
             if (duration && String(s.duration_seconds) !== String(duration)) return false
             if (questions && String(s.question_limit) !== String(questions)) return false
+            
+            if (operators && Array.isArray(operators)) {
+              const sOps = [...(s.operator_set || [])].sort().join(",")
+              const qOps = [...operators].sort().join(",")
+              if (sOps !== qOps) return false
+            }
 
             const date = new Date(s.completed_at)
             if (timeframe === "weekly") {
@@ -121,7 +130,8 @@ export const createClient = () => {
           // Deduplicate: Keep only the highest score per user for this category combo
           const uniqueEntries = new Map<string, any>()
           filtered.forEach((s: any) => {
-            const key = `${s.user_id}-${s.session_mode}-${s.difficulty}`
+            const opsKey = [...(s.operator_set || [])].sort().join(",")
+            const key = `${s.user_id}-${s.session_mode}-${s.difficulty}-${opsKey}`
             const existing = uniqueEntries.get(key)
             if (!existing || s._primaryScore > existing._primaryScore) {
               uniqueEntries.set(key, {
