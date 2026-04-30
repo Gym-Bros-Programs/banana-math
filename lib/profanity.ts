@@ -17,15 +17,15 @@ const BAD_WORDS = [
   "moderator",
   "system",
   "banana-math"
-];
+]
 
 /**
  * Basic profanity and reserved word filter for usernames.
  */
 export function isProfane(text: string): boolean {
-  if (!text) return false;
-  const lower = text.toLowerCase();
-  
+  if (!text) return false
+  const lower = text.toLowerCase()
+
   // For strict filtering on usernames where boundaries might not exist (e.g. 'fuck123')
-  return BAD_WORDS.some(word => lower.includes(word));
+  return BAD_WORDS.some((word) => lower.includes(word))
 }

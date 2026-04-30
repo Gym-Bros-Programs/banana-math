@@ -3,14 +3,15 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { isProfane } from "@/lib/profanity"
 import { createClient } from "@/lib/supabase/server"
 
 export async function signIn(formData: FormData) {
   const identifier = formData.get("identifier") as string
   const password = formData.get("password") as string
-  
+
   let email = identifier
-  
+
   // If not an email and we are not in mock auth mode, lookup the email by username
   if (!identifier.includes("@") && process.env.NEXT_PUBLIC_MOCK_AUTH !== "true") {
     const { createClient: createSupabaseClient } = await import("@supabase/supabase-js")
@@ -18,11 +19,17 @@ export async function signIn(formData: FormData) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_KEY!
     )
-    const { data: profile } = await supabaseAdmin.from('profiles').select('id').eq('username', identifier).single()
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("username", identifier)
+      .single()
     if (!profile) {
       return redirect("/login?message=Invalid login credentials.")
     }
-    const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(profile.id)
+    const {
+      data: { user }
+    } = await supabaseAdmin.auth.admin.getUserById(profile.id)
     if (!user || !user.email) {
       return redirect("/login?message=Invalid login credentials.")
     }
@@ -37,25 +44,36 @@ export async function signIn(formData: FormData) {
   })
 
   if (error) {
+    if (error.message.toLowerCase().includes("email not confirmed")) {
+      return redirect("/login?message=Please confirm your email before signing in.")
+    }
     return redirect("/login?message=Could not authenticate user.")
   }
 
   return redirect("/")
 }
 
-import { isProfane } from "@/lib/profanity"
-
 export async function signUp(formData: FormData) {
   const origin = headers().get("origin")
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const username = formData.get("username") as string
+  const username = String(formData.get("username") ?? "").trim()
 
   if (isProfane(username)) {
     return redirect("/login?message=Username contains restricted or inappropriate language.")
   }
 
   const supabase = createClient()
+
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle()
+
+  if (existingProfile) {
+    return redirect("/login?message=Username is already taken.")
+  }
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -76,11 +94,51 @@ export async function signUp(formData: FormData) {
   return redirect("/login?message=Check your email to continue signing up.")
 }
 
+export async function requestPasswordReset(formData: FormData) {
+  const origin = headers().get("origin")
+  const email = formData.get("email") as string
+  if (!email) {
+    return redirect("/login?message=Enter your email to reset your password.")
+  }
+
+  const supabase = createClient()
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/auth/reset-password`
+  })
+
+  if (error) {
+    return redirect("/login?message=Could not send password reset email.")
+  }
+
+  return redirect("/login?message=Check your email for a password reset link.")
+}
+
+export async function updatePassword(formData: FormData) {
+  const password = formData.get("password") as string
+  if (!password) {
+    return redirect("/auth/reset-password?message=Enter a new password.")
+  }
+
+  const supabase = createClient()
+
+  const { error } = await supabase.auth.updateUser({
+    password
+  })
+
+  if (error) {
+    return redirect("/auth/reset-password?message=Could not update password.")
+  }
+
+  return redirect("/login?message=Password updated. Please sign in.")
+}
+
 export async function signInWithGoogle() {
   const isMockDb = process.env.NEXT_PUBLIC_MOCK_DB === "true"
   const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
-  
-  if (isMockDb || isMockAuth) {
+  const isGoogleAuthDisabled = process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH === "true"
+
+  if (isMockDb || isMockAuth || isGoogleAuthDisabled) {
     return redirect("/login?message=Google Sign In is not available during local testing.")
   }
 
@@ -90,8 +148,8 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback`,
-    },
+      redirectTo: `${origin}/auth/callback`
+    }
   })
 
   if (error) {

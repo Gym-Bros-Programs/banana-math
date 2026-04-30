@@ -11,6 +11,8 @@
   "rules": {
     "prettier/prettier": "warn",
     "no-unused-vars": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-require-imports": "off",
     "@typescript-eslint/no-unused-vars": [
       "warn",
       {
@@ -20,7 +22,7 @@
       }
     ],
     "import/order": [
-      "error",
+      "warn",
       {
         "groups": ["builtin", "external", "internal", "parent", "sibling", "index", "object"],
         "pathGroups": [
@@ -31,6 +33,7 @@
         "newlines-between": "always",
         "alphabetize": { "order": "asc", "caseInsensitive": true }
       }
-    ]
+    ],
+    "prefer-const": "warn"
   }
 }

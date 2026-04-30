@@ -33,7 +33,7 @@ function generateAddition(range, allowNegatives, difficulty) {
         question_text: `${a} + ${b} = ?`,
         correct_answer: String(answer),
         has_negatives: hasNeg(a, b, answer),
-        difficulty,
+        difficulty
       })
     }
   }
@@ -55,7 +55,7 @@ function generateSubtraction(range, allowNegatives, difficulty) {
         question_text: `${a} - ${b} = ?`,
         correct_answer: String(answer),
         has_negatives: hasNeg(a, b, answer),
-        difficulty,
+        difficulty
       })
     }
   }
@@ -69,18 +69,18 @@ function getMulRanges(difficultyLevel) {
   if (difficultyLevel === "Medium") {
     // 1d×2d, 2d×1d, 2d×2d
     return [
-      { aMin: 1,  aMax: 9,  bMin: 10, bMax: 99 }, // 1d × 2d
-      { aMin: 10, aMax: 99, bMin: 1,  bMax: 9  }, // 2d × 1d
-      { aMin: 10, aMax: 99, bMin: 10, bMax: 99 }, // 2d × 2d
+      { aMin: 1, aMax: 9, bMin: 10, bMax: 99 }, // 1d × 2d
+      { aMin: 10, aMax: 99, bMin: 1, bMax: 9 }, // 2d × 1d
+      { aMin: 10, aMax: 99, bMin: 10, bMax: 99 } // 2d × 2d
     ]
   }
   // Hard: 1d×3d, 3d×1d, 2d×3d, 3d×2d, 3d×3d
   return [
-    { aMin: 1,   aMax: 9,   bMin: 100, bMax: 999 }, // 1d × 3d
-    { aMin: 100, aMax: 999, bMin: 1,   bMax: 9   }, // 3d × 1d
-    { aMin: 10,  aMax: 99,  bMin: 100, bMax: 999 }, // 2d × 3d
-    { aMin: 100, aMax: 999, bMin: 10,  bMax: 99  }, // 3d × 2d
-    { aMin: 100, aMax: 999, bMin: 100, bMax: 999 }, // 3d × 3d
+    { aMin: 1, aMax: 9, bMin: 100, bMax: 999 }, // 1d × 3d
+    { aMin: 100, aMax: 999, bMin: 1, bMax: 9 }, // 3d × 1d
+    { aMin: 10, aMax: 99, bMin: 100, bMax: 999 }, // 2d × 3d
+    { aMin: 100, aMax: 999, bMin: 10, bMax: 99 }, // 3d × 2d
+    { aMin: 100, aMax: 999, bMin: 100, bMax: 999 } // 3d × 3d
   ]
 }
 
@@ -98,7 +98,7 @@ function generateMultiplication(difficultyLevel) {
           question_text: `${a} × ${b} = ?`,
           correct_answer: String(a * b),
           has_negatives: false,
-          difficulty: difficultyLevel,
+          difficulty: difficultyLevel
         })
       }
     }
@@ -127,7 +127,7 @@ function generateDivision(difficultyLevel) {
             question_text: `${dividend} ÷ ${b} = ?`,
             correct_answer: String(a),
             has_negatives: false,
-            difficulty: difficultyLevel,
+            difficulty: difficultyLevel
           })
         }
 
@@ -144,7 +144,7 @@ function generateDivision(difficultyLevel) {
               question_text: `${dividend} ÷ ${a} = ?`,
               correct_answer: String(b),
               has_negatives: false,
-              difficulty: difficultyLevel,
+              difficulty: difficultyLevel
             })
           }
         }
@@ -159,8 +159,8 @@ const MAX_PER_OP = 20000
 function sample(arr, n) {
   if (arr.length <= n) return arr
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
   return arr.slice(0, n)
 }
@@ -169,17 +169,20 @@ module.exports = {
   generate(options) {
     const { difficulty, ops, allowNegatives } = options
     const RANGES = {
-      Easy:   { min: 0,   max: 9   },
-      Medium: { min: 10,  max: 99  },
-      Hard:   { min: 100, max: 999 },
+      Easy: { min: 0, max: 9 },
+      Medium: { min: 10, max: 99 },
+      Hard: { min: 100, max: 999 }
     }
     const range = RANGES[difficulty] || RANGES.Easy
     let all = []
 
-    if (ops.includes("addition"))       all = all.concat(sample(generateAddition(range, allowNegatives, difficulty), MAX_PER_OP))
-    if (ops.includes("subtraction"))    all = all.concat(sample(generateSubtraction(range, allowNegatives, difficulty), MAX_PER_OP))
-    if (ops.includes("multiplication")) all = all.concat(sample(generateMultiplication(difficulty), MAX_PER_OP))
-    if (ops.includes("division"))       all = all.concat(sample(generateDivision(difficulty), MAX_PER_OP))
+    if (ops.includes("addition"))
+      all = all.concat(sample(generateAddition(range, allowNegatives, difficulty), MAX_PER_OP))
+    if (ops.includes("subtraction"))
+      all = all.concat(sample(generateSubtraction(range, allowNegatives, difficulty), MAX_PER_OP))
+    if (ops.includes("multiplication"))
+      all = all.concat(sample(generateMultiplication(difficulty), MAX_PER_OP))
+    if (ops.includes("division")) all = all.concat(sample(generateDivision(difficulty), MAX_PER_OP))
 
     return all
   }

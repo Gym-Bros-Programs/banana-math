@@ -84,7 +84,7 @@ const SCHEMA_STATEMENTS = [
       ORDER BY random()
       LIMIT 1
     ) q;
-  $$`,
+  $$`
 ]
 
 async function runSchema(supabase) {
@@ -99,9 +99,9 @@ async function runSchema(supabase) {
       headers: {
         "Content-Type": "application/json",
         apikey: SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
       },
-      body: JSON.stringify({ sql }),
+      body: JSON.stringify({ sql })
     })
 
     // exec_sql may not exist yet — bootstrap it first via the admin API
@@ -112,9 +112,9 @@ async function runSchema(supabase) {
         headers: {
           "Content-Type": "application/json",
           apikey: SUPABASE_SERVICE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
         },
-        body: JSON.stringify({ query: sql }),
+        body: JSON.stringify({ query: sql })
       })
       if (!mgmtRes.ok) {
         const text = await mgmtRes.text()
@@ -180,7 +180,7 @@ async function main() {
 
   // Service role client bypasses RLS — required for DDL-style operations
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-    auth: { persistSession: false },
+    auth: { persistSession: false }
   })
 
   await runSchema(supabase)

@@ -25,7 +25,7 @@ jobs:
 
           RESPONSE=$(curl --silent --write-out "\n%{http_code}" \
             --request GET \
-            "$SUPABASE_URL/rest/v1/attempts?select=id&limit=1" \
+            "$SUPABASE_URL/rest/v1/sessions?select=id&limit=1" \
             --header "apikey: $SUPABASE_KEY" \
             --header "Authorization: Bearer $SUPABASE_KEY")
 

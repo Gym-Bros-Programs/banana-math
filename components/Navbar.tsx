@@ -3,7 +3,8 @@ import Link from "next/link"
 
 import AuthButton from "./AuthButton"
 
-const TEXT_CLASS = "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-xl font-bold px-4 py-1.5 rounded-md"
+const TEXT_CLASS =
+  "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-xl font-bold px-4 py-1.5 rounded-md"
 
 type NavbarProps = {
   isSupabaseConnected: boolean

@@ -11,14 +11,14 @@
  */
 
 const { createClient } = require("@supabase/supabase-js")
-const fs   = require("fs")
+const fs = require("fs")
 const path = require("path")
 
 require("dotenv").config({ path: path.resolve(process.cwd(), ".env.local") })
 
-const SUPABASE_URL     = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY
-const BATCH_SIZE       = 500
+const BATCH_SIZE = 500
 
 function loadQuestions(filename) {
   const jsonPath = path.resolve(process.cwd(), filename)
@@ -38,12 +38,12 @@ async function uploadQuestions(questions) {
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-    auth: { persistSession: false },
+    auth: { persistSession: false }
   })
 
   console.log("\nUploading to Supabase questions table...")
   let inserted = 0
-  let skipped  = 0
+  let skipped = 0
 
   for (let i = 0; i < questions.length; i += BATCH_SIZE) {
     const batch = questions.slice(i, i + BATCH_SIZE)
@@ -52,7 +52,7 @@ async function uploadQuestions(questions) {
       .from("questions")
       .upsert(batch, {
         onConflict: "operand_a,operand_b,operator", // matches UNIQUE constraint
-        ignoreDuplicates: true,
+        ignoreDuplicates: true
       })
       .select("id")
 
@@ -60,7 +60,7 @@ async function uploadQuestions(questions) {
       console.error(`\n❌ Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`, error.message)
     } else {
       inserted += data?.length ?? 0
-      skipped  += batch.length - (data?.length ?? 0)
+      skipped += batch.length - (data?.length ?? 0)
     }
 
     const pct = Math.round(((i + batch.length) / questions.length) * 100)

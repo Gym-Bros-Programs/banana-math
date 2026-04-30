@@ -34,7 +34,7 @@ const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN
 const SKIP_RESET = process.argv.includes("--only")
 
 const MGMT_API = "https://api.supabase.com"
-const POLL_INTERVAL_MS = 5000   // check every 5 seconds
+const POLL_INTERVAL_MS = 5000 // check every 5 seconds
 const MAX_WAIT_MS = 5 * 60 * 1000 // give up after 5 minutes
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -55,8 +55,8 @@ async function mgmtFetch(path, method = "GET", body = null) {
     method,
     headers: {
       Authorization: `Bearer ${ACCESS_TOKEN}`,
-      "Content-Type": "application/json",
-    },
+      "Content-Type": "application/json"
+    }
   }
   if (body) opts.body = JSON.stringify(body)
 
@@ -69,7 +69,8 @@ async function mgmtFetch(path, method = "GET", body = null) {
 function validate() {
   const errors = []
   if (!SUPABASE_URL) errors.push("NEXT_PUBLIC_SUPABASE_URL is missing from .env.local")
-  if (!ACCESS_TOKEN) errors.push(`SUPABASE_ACCESS_TOKEN is missing from .env.local
+  if (!ACCESS_TOKEN)
+    errors.push(`SUPABASE_ACCESS_TOKEN is missing from .env.local
      Get one at: https://supabase.com/dashboard/account/tokens`)
 
   if (errors.length) {

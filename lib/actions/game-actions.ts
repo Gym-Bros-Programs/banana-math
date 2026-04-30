@@ -8,7 +8,14 @@ import type { Difficulty } from "@/lib/questions/arithmetic-generator"
 import type { SessionConfig, Question, QuestionSubType } from "@/lib/types/database"
 
 // Fetch a deduplicated question pool for a session
-export async function getQuestionsForSession(config: SessionConfig, difficulty: Difficulty = "Easy"): Promise<Question[]> {
+export async function getQuestionsForSession(
+  config: SessionConfig,
+  difficulty: Difficulty = "Easy"
+): Promise<Question[]> {
+  if (process.env.NEXT_PUBLIC_MOCK_DB === "true") {
+    return getFallbackQuestions(config, difficulty)
+  }
+
   const supabase = createClient()
 
   // Pool size: for timed sessions fetch generously; for fixed fetch exact count
@@ -32,14 +39,20 @@ export async function getQuestionsForSession(config: SessionConfig, difficulty: 
     return []
   }
 
-  console.log(`📊 DB Check: Found ${counts.length} rows matching ops: ${sortedOperatorSet.join(", ")} at difficulty: ${difficulty}`)
+  console.log(
+    `📊 DB Check: Found ${counts.length} rows matching ops: ${sortedOperatorSet.join(", ")} at difficulty: ${difficulty}`
+  )
 
   // Ensure every requested operator is represented in the available pool
-  const availableOps = new Set(counts.map(q => q.sub_type))
-  const missingOps = sortedOperatorSet.filter(op => !availableOps.has(op))
+  const availableOps = new Set(
+    (counts as Array<{ sub_type: QuestionSubType }>).map((q) => q.sub_type)
+  )
+  const missingOps = sortedOperatorSet.filter((op) => !availableOps.has(op))
 
   if (missingOps.length > 0) {
-    console.warn(`Missing questions in DB for: ${missingOps.join(", ")} at ${difficulty} difficulty`)
+    console.warn(
+      `Missing questions in DB for: ${missingOps.join(", ")} at ${difficulty} difficulty`
+    )
     return []
   }
 
@@ -48,11 +61,14 @@ export async function getQuestionsForSession(config: SessionConfig, difficulty: 
     p_operator_set: sortedOperatorSet,
     p_allow_negatives: config.allowNegatives,
     p_limit: poolSize,
-    p_difficulty: difficulty,
+    p_difficulty: difficulty
   })
 
   if (error || !data || data.length === 0) {
-    console.warn("⚠️ DB RPC get_questions_for_session returned no results:", error?.message || "Empty Pool")
+    console.warn(
+      "⚠️ DB RPC get_questions_for_session returned no results:",
+      error?.message || "Empty Pool"
+    )
     return []
   }
 
@@ -72,7 +88,7 @@ export async function createSession(
   const supabase = createClient()
 
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser()
 
   console.log("🚀 SERVER createSession called:", { correctCount, totalCount, difficulty })
@@ -93,11 +109,14 @@ export async function createSession(
       correct_count: correctCount,
       total_count: totalCount,
       accuracy: parseFloat(accuracy.toFixed(2)),
-      cqpm: (finalTime ?? config.durationSeconds) 
-        ? parseFloat((correctCount / ((finalTime ?? config.durationSeconds ?? 60) / 60)).toFixed(1)) 
-        : 0,
+      cqpm:
+        (finalTime ?? config.durationSeconds)
+          ? parseFloat(
+              (correctCount / ((finalTime ?? config.durationSeconds ?? 60) / 60)).toFixed(1)
+            )
+          : 0,
       is_leaderboard_eligible: isLeaderboardEligible(config),
-      difficulty: difficulty,
+      difficulty: difficulty
     })
     .select("id")
     .single()
@@ -139,7 +158,7 @@ export async function saveSessionAnswers(
     user_answer: a.userAnswer,
     is_correct: a.isCorrect,
     time_taken_ms: a.timeTakenMs,
-    order_in_session: a.orderInSession,
+    order_in_session: a.orderInSession
   }))
 
   const { error } = await supabase.from("session_answers").insert(rows)
@@ -154,7 +173,7 @@ async function updateSessionPercentile(sessionId: string): Promise<void> {
   const supabase = createClient()
 
   const { data: percentile, error } = await supabase.rpc("calculate_session_percentile", {
-    p_session_id: sessionId,
+    p_session_id: sessionId
   })
 
   if (error) {
@@ -170,20 +189,22 @@ export async function getUserSessions(): Promise<any[]> {
   const supabase = createClient()
 
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser()
 
   if (!user) return getMockSessions()
 
   const { data, error } = await supabase
     .from("sessions")
-    .select(`
+    .select(
+      `
       *,
       session_answers (
         *,
         question:questions (*)
       )
-    `)
+    `
+    )
     .eq("user_id", user.id)
     .order("completed_at", { ascending: false })
     .limit(50)
@@ -199,12 +220,12 @@ export async function getUserSessions(): Promise<any[]> {
 // Check if a session's configuration is eligible for the global leaderboard
 const STANDARD_PRESETS: string[][] = [
   ["addition", "division", "multiplication", "subtraction"], // all 4
-  ["addition", "subtraction"],                               // +- only
-  ["division", "multiplication"],                            // */ only
+  ["addition", "subtraction"], // +- only
+  ["division", "multiplication"], // */ only
   ["addition"],
   ["subtraction"],
   ["multiplication"],
-  ["division"],
+  ["division"]
 ]
 
 function isLeaderboardEligible(config: SessionConfig): boolean {
@@ -217,19 +238,21 @@ function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "E
   // If in UI testing mode, just return bare minimum 1+1=2 questions
   if (process.env.NEXT_PUBLIC_MOCK_DB === "true") {
     const poolSize = config.sessionMode === "fixed" ? (config.questionLimit ?? 20) : 100
-    return Array(poolSize).fill(null).map((_, i) => ({
-      id: `mock-q-${i}`,
-      category: "arithmetic",
-      sub_type: "addition",
-      operand_a: 1,
-      operand_b: 1,
-      operator: "+",
-      question_text: "1 + 1 = ?",
-      correct_answer: "2",
-      has_negatives: false,
-      difficulty: "Easy",
-      created_at: new Date().toISOString()
-    }))
+    return Array(poolSize)
+      .fill(null)
+      .map((_, i) => ({
+        id: `mock-q-${i}`,
+        category: "arithmetic",
+        sub_type: "addition",
+        operand_a: 1,
+        operand_b: 1,
+        operator: "+",
+        question_text: "1 + 1 = ?",
+        correct_answer: "2",
+        has_negatives: false,
+        difficulty: "Easy",
+        created_at: new Date().toISOString()
+      }))
   }
 
   // Generates a real playable pool locally — game works without any DB connection
@@ -255,7 +278,7 @@ function getMockSessions(): any[] {
       accuracy: 80,
       percentile: 72.5,
       completed_at: new Date().toISOString(),
-      session_answers: [],
-    },
+      session_answers: []
+    }
   ]
 }

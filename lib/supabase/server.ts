@@ -25,9 +25,10 @@ import { DEFAULT_MOCK_SESSIONS } from "./mock-data"
  */
 
 export const createClient = () => {
-  const MOCK_DB   = process.env.NEXT_PUBLIC_MOCK_DB   === "true"
+  const MOCK_DB = process.env.NEXT_PUBLIC_MOCK_DB === "true"
   const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
-  const HAS_DB    = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const HAS_DB =
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   const cookieStore = cookies()
 
@@ -51,7 +52,11 @@ export const createClient = () => {
       if (fs.existsSync(MOCK_DB_FILE)) {
         const fileData = fs.readFileSync(MOCK_DB_FILE, "utf-8")
         const parsed = JSON.parse(fileData)
-        if (Array.isArray(parsed) && parsed.length >= 5 && !parsed.some((s: any) => typeof s.accuracy !== "number")) {
+        if (
+          Array.isArray(parsed) &&
+          parsed.length >= 5 &&
+          !parsed.some((s: any) => typeof s.accuracy !== "number")
+        ) {
           mockSessions = parsed
         } else {
           fs.writeFileSync(MOCK_DB_FILE, JSON.stringify(mockSessions))
@@ -73,16 +78,29 @@ export const createClient = () => {
       _questionsFilter: null,
       _operatorFilter: null,
 
-      select:  () => mockQueryBuilder,
-      limit:   () => mockQueryBuilder,
-      update:  () => mockQueryBuilder,
-      upsert:  () => mockQueryBuilder,
-      range:   () => mockQueryBuilder,
-      in:      () => mockQueryBuilder,
-      is:      () => mockQueryBuilder,
+      select: () => mockQueryBuilder,
+      limit: () => mockQueryBuilder,
+      update: () => mockQueryBuilder,
+      upsert: () => mockQueryBuilder,
+      range: () => mockQueryBuilder,
+      in: () => mockQueryBuilder,
+      is: () => mockQueryBuilder,
+      gte: () => mockQueryBuilder,
       contains: () => mockQueryBuilder,
 
       insert: (data: any) => {
+        if (data && typeof data === "object" && "correct_count" in data) {
+          const inserted = {
+            id: `mock-${Date.now()}`,
+            completed_at: new Date().toISOString(),
+            ...data
+          }
+          mockSessions = [inserted, ...mockSessions]
+          try {
+            fs.writeFileSync(MOCK_DB_FILE, JSON.stringify(mockSessions))
+          } catch {}
+          mockQueryBuilder._lastInserted = inserted
+        }
         return mockQueryBuilder
       },
 
@@ -99,8 +117,11 @@ export const createClient = () => {
 
       order: () => mockQueryBuilder,
 
-      single: async () => ({ data: { id: "mock-session-id" }, error: null }),
-      
+      single: async () => ({
+        data: { id: mockQueryBuilder._lastInserted?.id ?? "mock-session-id" },
+        error: null
+      }),
+
       then: (resolve: any) => {
         if (mockQueryBuilder._context === "sessions") {
           resolve({ data: mockSessions, error: null })
@@ -120,7 +141,7 @@ export const createClient = () => {
             if (diff && s.difficulty !== diff) return false
             if (duration && String(s.duration_seconds) !== String(duration)) return false
             if (questions && String(s.question_limit) !== String(questions)) return false
-            
+
             if (operators && Array.isArray(operators)) {
               const sOps = [...(s.operator_set || [])].sort().join(",")
               const qOps = [...operators].sort().join(",")
@@ -159,8 +180,18 @@ export const createClient = () => {
           })
 
           const baseLeaderboard = [
-            { user_email: "expert@math.ninja", percentage: 100, completed_at: new Date(Date.now() - 3600000).toISOString(), _primaryScore: 100 },
-            { user_email: "demo@local.test", percentage: 95, completed_at: new Date(Date.now() - 7200000).toISOString(), _primaryScore: 95 },
+            {
+              user_email: "expert@math.ninja",
+              percentage: 100,
+              completed_at: new Date(Date.now() - 3600000).toISOString(),
+              _primaryScore: 100
+            },
+            {
+              user_email: "demo@local.test",
+              percentage: 95,
+              completed_at: new Date(Date.now() - 7200000).toISOString(),
+              _primaryScore: 95
+            }
           ]
 
           const combined = [...baseLeaderboard, ...Array.from(uniqueEntries.values())]
@@ -174,27 +205,33 @@ export const createClient = () => {
       auth: {
         getUser: async () => ({
           data: { user: isMockSessionActive() ? mockUser : null },
-          error: null,
+          error: null
         }),
         signOut: async () => {
-          try { cookieStore.set("mock_session_active", "false") } catch {}
+          try {
+            cookieStore.set("mock_session_active", "false")
+          } catch {}
           return { error: null }
         },
         signInWithPassword: async ({ email, password }: any) => {
           if ((email !== "a@a.a" && email !== "a") || password !== "123456") {
-            return { data: null, error: { message: "Invalid login credentials (use a@a.a or 'a' / 123456)" } }
+            return {
+              data: null,
+              error: { message: "Invalid login credentials (use a@a.a or 'a' / 123456)" }
+            }
           }
-          try { cookieStore.set("mock_session_active", "true") } catch {}
+          try {
+            cookieStore.set("mock_session_active", "true")
+          } catch {}
           return { data: { user: mockUser }, error: null }
         },
-        signUp: async () => {
-          try { cookieStore.set("mock_session_active", "true") } catch {}
-          return { data: { user: mockUser }, error: null }
-        }
+        signUp: async () => ({ data: { user: mockUser }, error: null }),
+        resetPasswordForEmail: async () => ({ data: {}, error: null }),
+        updateUser: async () => ({ data: { user: mockUser }, error: null })
       },
-      from:  () => mockQueryBuilder,
+      from: () => mockQueryBuilder,
       // rpc returns error → game-actions falls back to local generator
-      rpc:   async () => ({ data: null, error: { message: "DB unavailable (mock mode)" } }),
+      rpc: async () => ({ data: null, error: { message: "DB unavailable (mock mode)" } })
     } as any
   }
 
@@ -208,35 +245,46 @@ export const createClient = () => {
           return cookieStore.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value, ...options }) } catch {}
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch {}
         },
         remove(name: string, options: CookieOptions) {
-          try { cookieStore.set({ name, value: "", ...options }) } catch {}
-        },
-      },
+          try {
+            cookieStore.set({ name, value: "", ...options })
+          } catch {}
+        }
+      }
     }
   )
 
   if (MOCK_AUTH) {
-    realClient.auth.getUser = async () => ({
-      data: { user: isMockSessionActive() ? mockUser : null },
-      error: null,
-    }) as any
+    realClient.auth.getUser = async () =>
+      ({
+        data: { user: isMockSessionActive() ? mockUser : null },
+        error: null
+      }) as any
     realClient.auth.signOut = async () => {
-      try { cookieStore.set("mock_session_active", "false") } catch {}
+      try {
+        cookieStore.set("mock_session_active", "false")
+      } catch {}
       return { error: null }
     }
     realClient.auth.signInWithPassword = async ({ email, password }: any) => {
       if ((email !== "a@a.a" && email !== "a") || password !== "123456") {
-        return { data: null, error: { message: "Invalid login credentials (use a@a.a or 'a' / 123456)" } } as any
+        return {
+          data: null,
+          error: { message: "Invalid login credentials (use a@a.a or 'a' / 123456)" }
+        } as any
       }
-      try { cookieStore.set("mock_session_active", "true") } catch {}
+      try {
+        cookieStore.set("mock_session_active", "true")
+      } catch {}
       return { data: { user: mockUser }, error: null } as any
     }
-    realClient.auth.signUp = async () => {
-      try { cookieStore.set("mock_session_active", "true") } catch {}
-      return { data: { user: mockUser }, error: null } as any
-    }
+    realClient.auth.signUp = async () => ({ data: { user: mockUser }, error: null }) as any
+    realClient.auth.resetPasswordForEmail = async () => ({ data: {}, error: null }) as any
+    realClient.auth.updateUser = async () => ({ data: { user: mockUser }, error: null }) as any
     return realClient
   }
 

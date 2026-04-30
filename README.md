@@ -3,6 +3,7 @@
 A high-performance mental math practice platform focused on speed and simplicity.
 
 ## Project Roadmap
+
 - **Stage 1**: Core arithmetic engine (client-side).
 - **Stage 2**: Backend API for question delivery and scoring.
 - **Stage 3**: Persistent database and global leaderboards.
@@ -10,7 +11,6 @@ A high-performance mental math practice platform focused on speed and simplicity
 - **Stage 5**: Launch.
 
 For detailed information on the operational modes and local setup, see [DEVELOPMENT.md](./DEVELOPMENT.md).
-
 
 ## Run locally
 

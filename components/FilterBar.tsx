@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation"
 import React, { useState, useRef, useEffect } from "react"
 
+export type FilterOption = {
+  label: string
+  key: string
+  type?: "toggle" | "dropdown"
+  values: { label: string; value: string }[]
+}
+
 interface FilterBarProps {
-  options: {
-    label: string
-    key: string
-    type?: "toggle" | "dropdown"
-    values: { label: string, value: string }[]
-  }[]
+  options: FilterOption[]
   currentParams?: Record<string, string | undefined>
 }
 
@@ -46,7 +48,7 @@ export default function FilterBar({ options, currentParams = {} }: FilterBarProp
       {options.map((opt) => {
         const type = opt.type || "toggle"
         const currentValue = currentParams[opt.key] || "all"
-        const currentLabel = opt.values.find(v => v.value === currentValue)?.label || "All"
+        const currentLabel = opt.values.find((v) => v.value === currentValue)?.label || "All"
 
         return (
           <div key={opt.key} className="flex flex-col gap-1.5 relative">
@@ -82,7 +84,12 @@ export default function FilterBar({ options, currentParams = {} }: FilterBarProp
                   <span className="flex-1 text-left">{currentLabel}</span>
                   <svg
                     className={`w-3 h-3 text-[#C8BCAD] transition-transform ${openDropdown === opt.key ? "rotate-180" : ""}`}
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
                     <path d="m6 9 6 6 6-6" />
                   </svg>

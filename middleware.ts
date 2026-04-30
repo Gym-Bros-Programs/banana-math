@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_MOCK_DB === "true"
   ) {
-    return response;
+    return response
   }
 
   const supabase = createServerClient(

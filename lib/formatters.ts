@@ -1,15 +1,15 @@
 import type { QuestionSubType } from "./types/database"
 
 export const SUB_TYPE_LABELS: Record<QuestionSubType, string> = {
-  addition:       "+",
-  subtraction:    "−",
+  addition: "+",
+  subtraction: "−",
   multiplication: "×",
-  division:       "÷",
-  decimal:        ".",
-  fraction:       "½",
-  exponent:       "^",
-  linear:         "Linear",
-  quadratic:      "Quadratic",
+  division: "÷",
+  decimal: ".",
+  fraction: "½",
+  exponent: "^",
+  linear: "Linear",
+  quadratic: "Quadratic"
 }
 
 export function formatOperatorSet(set: string[] | null | undefined): string {
@@ -25,6 +25,6 @@ export function formatDate(iso: string): string {
     month: "short",
     day: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }

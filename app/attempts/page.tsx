@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation"
 
-import { createClient } from "@/lib/supabase/server"
-import type { SessionWithAnswers, QuestionSubType } from "@/lib/types/database"
-
-import { SUB_TYPE_LABELS, formatOperatorSet, formatDate } from "@/lib/formatters"
-
+import type { FilterOption } from "@/components/FilterBar"
 import FilterBar from "@/components/FilterBar"
+import { createClient } from "@/lib/supabase/server"
+import { OPERATOR_PRESETS, type SessionWithAnswers } from "@/lib/types/database"
+import { formatOperatorSet, formatDate } from "@/lib/formatters"
 
 export default async function AttemptHistory({
-  searchParams,
+  searchParams
 }: {
   searchParams: { [key: string]: string | undefined }
 }) {
@@ -21,7 +20,7 @@ export default async function AttemptHistory({
 
   const {
     data: { user },
-    error: authError,
+    error: authError
   } = await supabase.auth.getUser()
 
   const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
@@ -35,13 +34,15 @@ export default async function AttemptHistory({
   // If logged in, fetch user's sessions. If not, fetch sessions where user_id is null (Guest sessions)
   let query = supabase
     .from("sessions")
-    .select(`
+    .select(
+      `
       *,
       session_answers (
         *,
         question:questions (*)
       )
-    `)
+    `
+    )
     .order("completed_at", { ascending: false })
     .limit(50)
 
@@ -53,12 +54,13 @@ export default async function AttemptHistory({
 
   if (modeFilter && modeFilter !== "all") query = query.eq("session_mode", modeFilter)
   if (diffFilter && diffFilter !== "all") query = query.eq("difficulty", diffFilter)
-  if (durationFilter && durationFilter !== "all") query = query.eq("duration_seconds", durationFilter)
-  if (questionsFilter && questionsFilter !== "all") query = query.eq("question_limit", questionsFilter)
+  if (durationFilter && durationFilter !== "all")
+    query = query.eq("duration_seconds", durationFilter)
+  if (questionsFilter && questionsFilter !== "all")
+    query = query.eq("question_limit", questionsFilter)
 
   if (operatorFilter && operatorFilter !== "all") {
-    const { OPERATOR_PRESETS } = require("@/lib/types/database")
-    const ops = OPERATOR_PRESETS[operatorFilter as any]
+    const ops = OPERATOR_PRESETS[operatorFilter as keyof typeof OPERATOR_PRESETS]
     if (ops && ops.length > 0) {
       query = query.contains("operator_set", [...ops].sort())
     }
@@ -74,7 +76,7 @@ export default async function AttemptHistory({
 
   // Client-side filter for mock data (when user is null/mock)
   if (modeFilter || diffFilter || durationFilter || questionsFilter) {
-    sessions = sessions.filter(s => {
+    sessions = sessions.filter((s) => {
       if (modeFilter && s.session_mode !== modeFilter) return false
       if (diffFilter && s.difficulty !== diffFilter) return false
       if (durationFilter && String(s.duration_seconds) !== durationFilter) return false
@@ -83,15 +85,15 @@ export default async function AttemptHistory({
     })
   }
 
-  const filterOptions = [
+  const filterOptions: FilterOption[] = [
     {
       label: "Mode",
       key: "mode",
       values: [
         { label: "All", value: "all" },
         { label: "Timed", value: "timed" },
-        { label: "Question Based", value: "fixed" },
-      ],
+        { label: "Question Based", value: "fixed" }
+      ]
     },
     {
       label: "Difficulty",
@@ -100,8 +102,8 @@ export default async function AttemptHistory({
         { label: "All", value: "all" },
         { label: "Easy", value: "Easy" },
         { label: "Medium", value: "Medium" },
-        { label: "Hard", value: "Hard" },
-      ],
+        { label: "Hard", value: "Hard" }
+      ]
     },
     {
       label: "Type",
@@ -115,9 +117,9 @@ export default async function AttemptHistory({
         { label: "+ only", value: "addition" },
         { label: "− only", value: "subtraction" },
         { label: "× only", value: "multiplication" },
-        { label: "÷ only", value: "division" },
-      ],
-    },
+        { label: "÷ only", value: "division" }
+      ]
+    }
   ]
 
   if (modeFilter === "timed") {
@@ -129,8 +131,8 @@ export default async function AttemptHistory({
         { label: "15s", value: "15" },
         { label: "30s", value: "30" },
         { label: "60s", value: "60" },
-        { label: "120s", value: "120" },
-      ],
+        { label: "120s", value: "120" }
+      ]
     })
   } else if (modeFilter === "fixed") {
     filterOptions.push({
@@ -141,20 +143,22 @@ export default async function AttemptHistory({
         { label: "10Q", value: "10" },
         { label: "25Q", value: "25" },
         { label: "50Q", value: "50" },
-        { label: "100Q", value: "100" },
-      ],
+        { label: "100Q", value: "100" }
+      ]
     })
   }
 
   return (
     <div
       className="w-full flex flex-col pt-10 pb-4 font-['Inter'] overflow-hidden"
-      style={{ height: 'calc(100vh - 115px)' }}
+      style={{ height: "calc(100vh - 115px)" }}
     >
       <div className="w-full shrink-0">
         {/* Header */}
         <div className="border-b border-[#2C2920] pb-4 text-left">
-          <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">Session History</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">
+            Session History
+          </h1>
           <p className="text-[#C8BCAD] mt-1 text-sm">Your past practice sessions</p>
         </div>
 
@@ -185,7 +189,9 @@ export default async function AttemptHistory({
                         <span className="text-2xl font-black text-[hsl(50,100%,52%)] leading-none">
                           {session.cqpm ?? 0}
                         </span>
-                        <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold mt-1">QPM</span>
+                        <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold mt-1">
+                          QPM
+                        </span>
                       </div>
 
                       {/* Accuracy badge - SVG progress circle */}
@@ -223,8 +229,12 @@ export default async function AttemptHistory({
                       <div className="flex items-center gap-6 text-[#EDE6DA] font-semibold">
                         {/* Operator Chip */}
                         <div className="bg-[#211E17] px-2.5 py-1 rounded border border-[#2C2920] text-[#EDE6DA] font-bold text-xs flex items-center gap-1.5 min-w-[95px] justify-center">
-                          <span className="text-base leading-none">{formatOperatorSet(session.operator_set)}</span>
-                          {session.allow_negatives && <span className="w-1 h-1 rounded-full bg-red-500/50" />}
+                          <span className="text-base leading-none">
+                            {formatOperatorSet(session.operator_set)}
+                          </span>
+                          {session.allow_negatives && (
+                            <span className="w-1 h-1 rounded-full bg-red-500/50" />
+                          )}
                         </div>
 
                         <div className="h-4 w-px bg-[#2C2920]" />
@@ -232,15 +242,26 @@ export default async function AttemptHistory({
                         {/* Stats Segment */}
                         <div className="flex items-center gap-3 whitespace-nowrap min-w-[155px]">
                           <div className="flex items-baseline gap-1 min-w-[80px] justify-end">
-                            <span className="text-xl font-bold leading-none">{session.correct_count}/{session.total_count}</span>
-                            <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold">correct</span>
+                            <span className="text-xl font-bold leading-none">
+                              {session.correct_count}/{session.total_count}
+                            </span>
+                            <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold">
+                              correct
+                            </span>
                           </div>
                           <div className="min-w-[42px] flex justify-center">
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded border font-black uppercase tracking-tighter ${session.difficulty === "Hard" ? "border-red-500/30 text-red-400 bg-red-500/5" :
-                                session.difficulty === "Medium" ? "border-orange-500/30 text-orange-400 bg-orange-500/5" :
-                                  "border-[hsl(50,100%,52%)]/30 text-[hsl(50,100%,52%)] bg-[hsl(50,100%,52%)]/5"
-                              }`}>
-                              {session.difficulty === "Medium" ? "MED" : session.difficulty?.toUpperCase()}
+                            <span
+                              className={`text-[9px] px-1.5 py-0.5 rounded border font-black uppercase tracking-tighter ${
+                                session.difficulty === "Hard"
+                                  ? "border-red-500/30 text-red-400 bg-red-500/5"
+                                  : session.difficulty === "Medium"
+                                    ? "border-orange-500/30 text-orange-400 bg-orange-500/5"
+                                    : "border-[hsl(50,100%,52%)]/30 text-[hsl(50,100%,52%)] bg-[hsl(50,100%,52%)]/5"
+                              }`}
+                            >
+                              {session.difficulty === "Medium"
+                                ? "MED"
+                                : session.difficulty?.toUpperCase()}
                             </span>
                           </div>
                         </div>
@@ -259,14 +280,19 @@ export default async function AttemptHistory({
                         <div className="h-4 w-px bg-[#2C2920]" />
 
                         {/* Date Segment */}
-                        <span suppressHydrationWarning className="text-[#8B8476] text-sm font-normal whitespace-nowrap">
+                        <span
+                          suppressHydrationWarning
+                          className="text-[#8B8476] text-sm font-normal whitespace-nowrap"
+                        >
                           {formatDate(session.completed_at)}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-6 text-right min-w-[140px] justify-end">
-                      <span className="text-[#2C2920] group-open:rotate-180 transition-transform text-xl">▼</span>
+                      <span className="text-[#2C2920] group-open:rotate-180 transition-transform text-xl">
+                        ▼
+                      </span>
                     </div>
                   </summary>
 
@@ -277,10 +303,18 @@ export default async function AttemptHistory({
                         <thead>
                           <tr className="text-[#C8BCAD] text-left border-b border-[#2C2920]">
                             <th className="pb-2 font-medium w-8 border-r border-[#2C2920]">#</th>
-                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">Question</th>
-                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">Your Answer</th>
-                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">Correct Answer</th>
-                            <th className="pb-2 font-medium text-right border-r border-[#2C2920] px-4">Time</th>
+                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">
+                              Question
+                            </th>
+                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">
+                              Your Answer
+                            </th>
+                            <th className="pb-2 font-medium border-r border-[#2C2920] px-4">
+                              Correct Answer
+                            </th>
+                            <th className="pb-2 font-medium text-right border-r border-[#2C2920] px-4">
+                              Time
+                            </th>
                             <th className="pb-2 font-medium text-right w-8 px-4"></th>
                           </tr>
                         </thead>
@@ -296,8 +330,9 @@ export default async function AttemptHistory({
                                   {answer.question?.question_text ?? "—"}
                                 </td>
                                 <td
-                                  className={`py-2 border-r border-[#2C2920] px-4 ${answer.is_correct ? "text-[hsl(50,100%,52%)]" : "text-red-400"
-                                    }`}
+                                  className={`py-2 border-r border-[#2C2920] px-4 ${
+                                    answer.is_correct ? "text-[hsl(50,100%,52%)]" : "text-red-400"
+                                  }`}
                                 >
                                   {answer.user_answer}
                                 </td>
@@ -330,10 +365,11 @@ export default async function AttemptHistory({
                   )}
                   {session.session_answers?.length > 0 &&
                     session.session_answers.every((a: any) => !a.question) && (
-                    <div className="border-t border-[#2C2920] px-6 py-4 text-[#C8BCAD] text-sm">
-                      Question details are no longer available — the question set was updated. Your score and ranking are preserved.
-                    </div>
-                  )}
+                      <div className="border-t border-[#2C2920] px-6 py-4 text-[#C8BCAD] text-sm">
+                        Question details are no longer available — the question set was updated.
+                        Your score and ranking are preserved.
+                      </div>
+                    )}
                 </details>
               )
             })}

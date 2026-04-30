@@ -1,6 +1,6 @@
 /**
  * db/uploader.js
- * 
+ *
  * Handles uploading questions to Supabase.
  * Supports switching between local and actual Supabase if different env vars are provided.
  */
@@ -37,10 +37,12 @@ async function uploadQuestions(filename, options = {}) {
   }
 
   const questions = JSON.parse(fs.readFileSync(jsonPath, "utf8"))
-  console.log(`\n🚀 Uploading ${questions.length.toLocaleString()} questions to ${SUPABASE_URL} (${target})`)
+  console.log(
+    `\n🚀 Uploading ${questions.length.toLocaleString()} questions to ${SUPABASE_URL} (${target})`
+  )
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-    auth: { persistSession: false },
+    auth: { persistSession: false }
   })
 
   let inserted = 0
@@ -53,7 +55,7 @@ async function uploadQuestions(filename, options = {}) {
       .from("questions")
       .upsert(batch, {
         onConflict: "operand_a,operand_b,operator",
-        ignoreDuplicates: true,
+        ignoreDuplicates: true
       })
       .select("id")
 
@@ -77,15 +79,17 @@ module.exports = { uploadQuestions }
 
 if (require.main === module) {
   const args = process.argv.slice(2)
-  const filename = args.find(a => !a.startsWith("--"))
-  const target = args.find(a => a.startsWith("--target="))?.split("=")[1] || "default"
+  const filename = args.find((a) => !a.startsWith("--"))
+  const target = args.find((a) => a.startsWith("--target="))?.split("=")[1] || "default"
 
   if (!filename) {
-    console.error("Usage: node scripts/question-gen/db/uploader.js <questions.json> [--target=prod|local]")
+    console.error(
+      "Usage: node scripts/question-gen/db/uploader.js <questions.json> [--target=prod|local]"
+    )
     process.exit(1)
   }
 
-  uploadQuestions(filename, { target }).catch(err => {
+  uploadQuestions(filename, { target }).catch((err) => {
     console.error("\n💥 Fatal Error:", err)
     process.exit(1)
   })

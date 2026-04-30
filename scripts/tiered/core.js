@@ -11,17 +11,17 @@
  */
 
 const { createClient } = require("@supabase/supabase-js")
-const path             = require("path")
+const path = require("path")
 require("dotenv").config({ path: path.resolve(process.cwd(), ".env.local") })
 
 const BATCH_SIZE = 500
-const ROW_CAP    = 10_000
+const ROW_CAP = 10_000
 
 // Fisher-Yates in-place shuffle, then slice to n.
 function randomSample(arr, n) {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
   }
   return arr.slice(0, n)
 }
@@ -50,15 +50,15 @@ function addRange(aMin, aMax, bMin, bMax) {
     for (let b = bMin; b <= bMax; b++) {
       const answer = a + b
       qs.push({
-        category:       "arithmetic",
-        sub_type:       "addition",
-        operand_a:      a,
-        operand_b:      b,
-        operator:       "+",
-        question_text:  `${a} + ${b} = ?`,
+        category: "arithmetic",
+        sub_type: "addition",
+        operand_a: a,
+        operand_b: b,
+        operator: "+",
+        question_text: `${a} + ${b} = ?`,
         correct_answer: String(answer),
-        has_negatives:  false,
-        difficulty:     calcDifficulty(a, b, answer),
+        has_negatives: false,
+        difficulty: calcDifficulty(a, b, answer)
       })
     }
   }
@@ -76,15 +76,15 @@ function subRange(aMin, aMax, bMin, bMax) {
       if (a < b) continue
       const answer = a - b
       qs.push({
-        category:       "arithmetic",
-        sub_type:       "subtraction",
-        operand_a:      a,
-        operand_b:      b,
-        operator:       "-",
-        question_text:  `${a} - ${b} = ?`,
+        category: "arithmetic",
+        sub_type: "subtraction",
+        operand_a: a,
+        operand_b: b,
+        operator: "-",
+        question_text: `${a} - ${b} = ?`,
         correct_answer: String(answer),
-        has_negatives:  false,
-        difficulty:     calcDifficulty(a, b, answer),
+        has_negatives: false,
+        difficulty: calcDifficulty(a, b, answer)
       })
     }
   }
@@ -100,15 +100,15 @@ function mulRange(aMin, aMax, bMin, bMax) {
     for (let b = bMin; b <= bMax; b++) {
       const answer = a * b
       qs.push({
-        category:       "arithmetic",
-        sub_type:       "multiplication",
-        operand_a:      a,
-        operand_b:      b,
-        operator:       "*",
-        question_text:  `${a} × ${b} = ?`,
+        category: "arithmetic",
+        sub_type: "multiplication",
+        operand_a: a,
+        operand_b: b,
+        operator: "*",
+        question_text: `${a} × ${b} = ?`,
         correct_answer: String(answer),
-        has_negatives:  false,
-        difficulty:     calcDifficulty(a, b, answer),
+        has_negatives: false,
+        difficulty: calcDifficulty(a, b, answer)
       })
     }
   }
@@ -123,26 +123,26 @@ function mulRange(aMin, aMax, bMin, bMax) {
  */
 function divFromMul(aMin, aMax, bMin, bMax) {
   const seen = new Set()
-  const qs   = []
+  const qs = []
   const safeB = Math.max(bMin, 1)
 
   for (let result = aMin; result <= aMax; result++) {
     for (let divisor = safeB; divisor <= bMax; divisor++) {
       const dividend = result * divisor
-      const key      = `${dividend}/${divisor}`
+      const key = `${dividend}/${divisor}`
       if (seen.has(key)) continue
       seen.add(key)
 
       qs.push({
-        category:       "arithmetic",
-        sub_type:       "division",
-        operand_a:      dividend,
-        operand_b:      divisor,
-        operator:       "/",
-        question_text:  `${dividend} ÷ ${divisor} = ?`,
+        category: "arithmetic",
+        sub_type: "division",
+        operand_a: dividend,
+        operand_b: divisor,
+        operator: "/",
+        question_text: `${dividend} ÷ ${divisor} = ?`,
         correct_answer: String(result),
-        has_negatives:  false,
-        difficulty:     calcDifficulty(dividend, divisor, result),
+        has_negatives: false,
+        difficulty: calcDifficulty(dividend, divisor, result)
       })
     }
   }
@@ -177,7 +177,7 @@ async function uploadToDB(questions, label) {
   console.log()
 
   let inserted = 0
-  let skipped  = 0
+  let skipped = 0
 
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE)
@@ -191,11 +191,13 @@ async function uploadToDB(questions, label) {
       console.error(`\n❌ Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`, error.message)
     } else {
       inserted += data?.length ?? 0
-      skipped  += batch.length - (data?.length ?? 0)
+      skipped += batch.length - (data?.length ?? 0)
     }
 
     const pct = Math.round(((i + batch.length) / rows.length) * 100)
-    process.stdout.write(`  ${pct}% (${(i + batch.length).toLocaleString()}/${rows.length.toLocaleString()})...\r`)
+    process.stdout.write(
+      `  ${pct}% (${(i + batch.length).toLocaleString()}/${rows.length.toLocaleString()})...\r`
+    )
   }
 
   console.log(`\n✅ Done!`)

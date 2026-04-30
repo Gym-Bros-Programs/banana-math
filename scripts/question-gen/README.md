@@ -6,7 +6,7 @@ A modular system for generating and uploading math questions to Supabase (Local 
 
 - `index.js`: Main entry point and dispatcher.
 - `generators/`: Specific question generation logic.
-  - `arithmetic.js`: Handles +, -, *, /.
+  - `arithmetic.js`: Handles +, -, \*, /.
 - `db/`: Database operations.
   - `uploader.js`: Handles bulk upserts to Supabase.
 - `output/`: Generated JSON files.
@@ -24,6 +24,7 @@ npm run db:generate:hard   # 3-digit +/-/*//
 ```
 
 You can also run manually for more control:
+
 ```bash
 node scripts/question-gen/index.js generate --difficulty=Easy --ops=addition --allow-negatives=true
 ```
@@ -38,6 +39,7 @@ npm run db:seed:medium # Upload Medium questions to local
 ```
 
 #### Targeting Production
+
 To target production, ensure you have `SUPABASE_URL_PROD` and `SUPABASE_SERVICE_KEY_PROD` in your `.env.local`, then run:
 
 ```bash

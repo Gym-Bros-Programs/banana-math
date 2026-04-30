@@ -1,18 +1,18 @@
 /**
  * generate-questions.js
- * 
+ *
  * Generates arithmetic questions with specific difficulty levels and rules.
- * 
+ *
  * Usage:
  *   node scripts/generate-questions.js --difficulty Easy --ops addition,subtraction
  *   node scripts/generate-questions.js --difficulty Medium --ops multiplication,division
- * 
+ *
  * Flags:
  *   --difficulty [Easy|Medium|Hard]  (default: Easy)
  *   --ops [comma-separated ops]     (default: addition,subtraction)
  *   --allow-negatives [true|false]  (default: false)
  *   --dry-run                       (don't write to file)
- * 
+ *
  * Difficulty Definitions (1-digit = Easy, etc.):
  *   Easy:   Operands 0-9
  *   Medium: Operands 0-99
@@ -39,7 +39,7 @@ const OUT_FILE = path.resolve(process.cwd(), `scripts/questions_${DIFFICULTY.toL
 const RANGES = {
   Easy: { min: 0, max: 9 },
   Medium: { min: 0, max: 99 },
-  Hard: { min: 0, max: 999 },
+  Hard: { min: 0, max: 999 }
 }
 
 // --- Helpers ---
@@ -67,7 +67,7 @@ function generateAddition(range) {
     for (let b = range.min; b <= range.max; b++) {
       const answer = a + b
       if (!ALLOW_NEGATIVES && hasNeg(a, b, answer)) continue
-      
+
       questions.push({
         category: "arithmetic",
         sub_type: "addition",
@@ -77,7 +77,7 @@ function generateAddition(range) {
         question_text: `${a} + ${b} = ?`,
         correct_answer: String(answer),
         has_negatives: hasNeg(a, b, answer),
-        difficulty: calcDifficultyScore(a, b, answer),
+        difficulty: calcDifficultyScore(a, b, answer)
       })
     }
   }
@@ -90,7 +90,7 @@ function generateSubtraction(range) {
     for (let b = range.min; b <= range.max; b++) {
       const answer = a - b
       if (!ALLOW_NEGATIVES && (a < b || hasNeg(a, b, answer))) continue
-      
+
       questions.push({
         category: "arithmetic",
         sub_type: "subtraction",
@@ -100,7 +100,7 @@ function generateSubtraction(range) {
         question_text: `${a} - ${b} = ?`,
         correct_answer: String(answer),
         has_negatives: hasNeg(a, b, answer),
-        difficulty: calcDifficultyScore(a, b, answer),
+        difficulty: calcDifficultyScore(a, b, answer)
       })
     }
   }
@@ -124,7 +124,7 @@ function generateMultiplication(range) {
         question_text: `${a} × ${b} = ?`,
         correct_answer: String(answer),
         has_negatives: false,
-        difficulty: calcDifficultyScore(a, b, answer),
+        difficulty: calcDifficultyScore(a, b, answer)
       })
     }
   }
@@ -148,7 +148,7 @@ function generateDivision(range) {
         question_text: `${dividend} ÷ ${divisor} = ?`,
         correct_answer: String(res),
         has_negatives: false,
-        difficulty: calcDifficultyScore(dividend, divisor, res),
+        difficulty: calcDifficultyScore(dividend, divisor, res)
       })
     }
   }

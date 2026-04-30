@@ -16,7 +16,16 @@ export type QuestionSubType =
 
 export type SessionMode = "timed" | "fixed"
 
-export type OperatorPreset = "all" | "all_4" | "add_sub" | "mul_div" | "addition" | "subtraction" | "multiplication" | "division" | "custom"
+export type OperatorPreset =
+  | "all"
+  | "all_4"
+  | "add_sub"
+  | "mul_div"
+  | "addition"
+  | "subtraction"
+  | "multiplication"
+  | "division"
+  | "custom"
 
 // ─── Guest storage ─────────────────────────────────────────────────────────────
 
@@ -93,39 +102,46 @@ export interface SessionConfig {
   operatorSet: QuestionSubType[]
   allowNegatives: boolean
   sessionMode: SessionMode
-  durationSeconds?: number   // for timed
-  questionLimit?: number     // for fixed
+  durationSeconds?: number // for timed
+  questionLimit?: number // for fixed
 }
 
 // ─── Operator preset helpers ───────────────────────────────────────────────
 
 export const OPERATOR_PRESETS: Record<OperatorPreset, QuestionSubType[]> = {
-  all:            [], // represents "no filter" on operators
-  all_4:          ["addition", "subtraction", "multiplication", "division"],
-  add_sub:        ["addition", "subtraction"],
-  mul_div:        ["multiplication", "division"],
-  addition:       ["addition"],
-  subtraction:    ["subtraction"],
+  all: [], // represents "no filter" on operators
+  all_4: ["addition", "subtraction", "multiplication", "division"],
+  add_sub: ["addition", "subtraction"],
+  mul_div: ["multiplication", "division"],
+  addition: ["addition"],
+  subtraction: ["subtraction"],
   multiplication: ["multiplication"],
-  division:       ["division"],
-  custom:         [], // populated by user
+  division: ["division"],
+  custom: [] // populated by user
 }
 
 export const PRESET_LABELS: Record<OperatorPreset, string> = {
-  all:            "All Types",
-  all_4:          "+ − × ÷",
-  add_sub:        "+ and − only",
-  mul_div:        "× and ÷ only",
-  addition:       "Addition only",
-  subtraction:    "Subtraction only",
+  all: "All Types",
+  all_4: "+ − × ÷",
+  add_sub: "+ and − only",
+  mul_div: "× and ÷ only",
+  addition: "Addition only",
+  subtraction: "Subtraction only",
   multiplication: "Multiplication only",
-  division:       "Division only",
-  custom:         "Custom",
+  division: "Division only",
+  custom: "Custom"
 }
 
 /** These presets are leaderboard-eligible; custom combos or advanced types are not */
 export const LEADERBOARD_PRESETS: OperatorPreset[] = [
-  "all", "all_4", "add_sub", "mul_div", "addition", "subtraction", "multiplication", "division",
+  "all",
+  "all_4",
+  "add_sub",
+  "mul_div",
+  "addition",
+  "subtraction",
+  "multiplication",
+  "division"
 ]
 
 // ─── Supabase Database type (for typed client) ─────────────────────────────

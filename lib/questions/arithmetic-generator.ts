@@ -15,15 +15,15 @@ import type { Question, QuestionSubType, SessionConfig } from "@/lib/types/datab
 export type Difficulty = "Easy" | "Medium" | "Hard"
 
 const RANGES: Record<Difficulty, { min: number; max: number }> = {
-  Easy:   { min: 1,  max: 10  },
-  Medium: { min: 1,  max: 50  },
-  Hard:   { min: 1,  max: 100 },
+  Easy: { min: 1, max: 10 },
+  Medium: { min: 1, max: 50 },
+  Hard: { min: 1, max: 100 }
 }
 // Multiplication uses a narrower range to keep answers manageable
 const MUL_RANGES: Record<Difficulty, { min: number; max: number }> = {
-  Easy:   { min: 1, max: 10 },
+  Easy: { min: 1, max: 10 },
   Medium: { min: 1, max: 12 },
-  Hard:   { min: 1, max: 20 },
+  Hard: { min: 1, max: 20 }
 }
 
 function rand(min: number, max: number) {
@@ -32,24 +32,26 @@ function rand(min: number, max: number) {
 
 function makeQ(
   subType: QuestionSubType,
-  a: number, b: number,
+  difficulty: Difficulty,
+  a: number,
+  b: number,
   operator: string,
   answer: number,
   display: string,
   id: string
 ): Question {
   return {
-    id:             `local-${subType}-${id}`,
-    category:       "arithmetic",
-    sub_type:       subType,
-    operand_a:      a,
-    operand_b:      b,
+    id: `local-${subType}-${id}`,
+    category: "arithmetic",
+    sub_type: subType,
+    operand_a: a,
+    operand_b: b,
     operator,
-    question_text:  display,
+    question_text: display,
     correct_answer: String(answer),
-    has_negatives:  a < 0 || b < 0 || answer < 0,
-    difficulty:     1,
-    created_at:     new Date().toISOString(),
+    has_negatives: a < 0 || b < 0 || answer < 0,
+    difficulty,
+    created_at: new Date().toISOString()
   }
 }
 
@@ -57,16 +59,20 @@ function applyNegative(val: number, allowNeg: boolean): number {
   return allowNeg && Math.random() < 0.4 ? -val : val
 }
 
-function generateOne(subType: QuestionSubType, difficulty: Difficulty, allowNeg: boolean): Question {
-  const r   = RANGES[difficulty]
-  const mr  = MUL_RANGES[difficulty]
+function generateOne(
+  subType: QuestionSubType,
+  difficulty: Difficulty,
+  allowNeg: boolean
+): Question {
+  const r = RANGES[difficulty]
+  const mr = MUL_RANGES[difficulty]
   const uid = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
   switch (subType) {
     case "addition": {
       const a = applyNegative(rand(r.min, r.max), allowNeg)
       const b = applyNegative(rand(r.min, r.max), allowNeg)
-      return makeQ("addition", a, b, "+", a + b, `${a} + ${b} = ?`, uid)
+      return makeQ("addition", difficulty, a, b, "+", a + b, `${a} + ${b} = ?`, uid)
     }
     case "subtraction": {
       let a = rand(r.min, r.max)
@@ -74,24 +80,24 @@ function generateOne(subType: QuestionSubType, difficulty: Difficulty, allowNeg:
       if (!allowNeg && a < b) [a, b] = [b, a] // Ensure positive result
       a = applyNegative(a, allowNeg)
       b = applyNegative(b, allowNeg)
-      return makeQ("subtraction", a, b, "-", a - b, `${a} - ${b} = ?`, uid)
+      return makeQ("subtraction", difficulty, a, b, "-", a - b, `${a} - ${b} = ?`, uid)
     }
     case "multiplication": {
       const a = applyNegative(rand(mr.min, mr.max), allowNeg)
       const b = applyNegative(rand(mr.min, mr.max), allowNeg)
-      return makeQ("multiplication", a, b, "*", a * b, `${a} × ${b} = ?`, uid)
+      return makeQ("multiplication", difficulty, a, b, "*", a * b, `${a} × ${b} = ?`, uid)
     }
     case "division": {
       // Generate (result × divisor) so the answer is always a clean integer
-      const result  = rand(r.min, difficulty === "Easy" ? 10 : difficulty === "Medium" ? 20 : 50)
+      const result = rand(r.min, difficulty === "Easy" ? 10 : difficulty === "Medium" ? 20 : 50)
       const divisor = rand(1, mr.max)
       const dividend = result * divisor
       const a = applyNegative(dividend, allowNeg)
-      const b = applyNegative(divisor,  allowNeg)
-      return makeQ("division", a, b, "/", a / b, `${a} ÷ ${b} = ?`, uid)
+      const b = applyNegative(divisor, allowNeg)
+      return makeQ("division", difficulty, a, b, "/", a / b, `${a} ÷ ${b} = ?`, uid)
     }
     default:
-      return makeQ("addition", 1, 1, "+", 2, "1 + 1 = ?", uid)
+      return makeQ("addition", difficulty, 1, 1, "+", 2, "1 + 1 = ?", uid)
   }
 }
 

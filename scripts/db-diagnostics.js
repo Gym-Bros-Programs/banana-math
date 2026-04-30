@@ -70,7 +70,7 @@ async function main() {
     } else {
       console.log("✅ Session retrieved correctly. Accuracy:", fetchResult.accuracy)
     }
-    
+
     // Cleanup
     await supabase.from("sessions").delete().eq("id", sData.id)
     console.log("\n🧹 Test session cleaned up.")
