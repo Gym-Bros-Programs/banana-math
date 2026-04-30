@@ -328,6 +328,12 @@ export default async function AttemptHistory({
                       No question detail available for this session.
                     </div>
                   )}
+                  {session.session_answers?.length > 0 &&
+                    session.session_answers.every((a: any) => !a.question) && (
+                    <div className="border-t border-[#2C2920] px-6 py-4 text-[#C8BCAD] text-sm">
+                      Question details are no longer available — the question set was updated. Your score and ranking are preserved.
+                    </div>
+                  )}
                 </details>
               )
             })}

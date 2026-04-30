@@ -43,7 +43,7 @@ function guestCount() {
   return JSON.parse(localStorage.getItem(GUEST_STORAGE_KEY) ?? "[]").length
 }
 
-export default function MonkeyMath() {
+export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -279,6 +279,23 @@ export default function MonkeyMath() {
 
     const finalT = selectedMode === "timed" ? selectedLength : timeElapsed
 
+    if (isGuest) {
+      if (guestCount() >= GUEST_SESSION_LIMIT - 1) setGuestWarning(true)
+      saveGuestSession({
+        id: `guest-${Date.now()}`, category: "arithmetic",
+        operator_set: activeOps, allow_negatives: false,
+        session_mode: selectedMode === "timed" ? "timed" : "fixed",
+        duration_seconds: finalT,
+        question_limit: selectedMode === "question based" ? selectedLength : null,
+        correct_count: correct, total_count: total,
+        difficulty: selectedDifficulty,
+        accuracy: total > 0 ? (correct / total) * 100 : 0,
+        is_leaderboard_eligible: false, completed_at: new Date().toISOString(),
+        session_answers: finalAnswers,
+      })
+      return
+    }
+
     try {
       const sessionId = await createSession(config, correct, total, finalT, selectedDifficulty)
       console.log("📝 createSession returned:", sessionId)
@@ -291,21 +308,6 @@ export default function MonkeyMath() {
           orderInSession: a.orderInSession,
         })))
         console.log("✅ Session and answers saved successfully!")
-      } else {
-        console.warn("⚠️ Got mock-session-id — saving to localStorage instead.")
-        if (guestCount() >= GUEST_SESSION_LIMIT - 1) setGuestWarning(true)
-        saveGuestSession({
-          id: `guest-${Date.now()}`, category: "arithmetic",
-          operator_set: activeOps, allow_negatives: false,
-          session_mode: selectedMode === "timed" ? "timed" : "fixed",
-          duration_seconds: finalT,
-          question_limit: selectedMode === "question based" ? selectedLength : null,
-          correct_count: correct, total_count: total,
-          difficulty: selectedDifficulty,
-          accuracy: total > 0 ? (correct / total) * 100 : 0,
-          is_leaderboard_eligible: true, completed_at: new Date().toISOString(),
-          session_answers: finalAnswers,
-        })
       }
     } catch (err) {
       console.error("❌ Exception in handleSessionEnd:", err)

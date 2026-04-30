@@ -1,5 +1,7 @@
 const { spawn, exec } = require("child_process");
+const { killPort } = require("./kill-port");
 
+killPort(3000);
 console.log("🍌 Starting banana-math in UI-Only Mock Mode...");
 
 const proc = spawn("npx", ["next", "dev"], {

@@ -1,5 +1,6 @@
 const { spawn, exec } = require("child_process");
 const net = require("net");
+const { killPort } = require("./kill-port");
 
 function checkSupabase() {
   return new Promise((resolve) => {
@@ -18,6 +19,7 @@ async function main() {
     process.exit(1);
   }
 
+  killPort(3000);
   console.log("🍌 Starting banana-math connected to Local Supabase DB...");
   startNext();
 }

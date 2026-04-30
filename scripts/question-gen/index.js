@@ -65,7 +65,7 @@ async function run() {
   } 
   
   else if (COMMAND === "upload") {
-    const filename = args[1] || path.join(OUTPUT_DIR, `questions_${DIFFICULTY.toLowerCase()}.json`)
+    const filename = (args[1] && !args[1].startsWith("--")) ? args[1] : path.join(OUTPUT_DIR, `questions_${DIFFICULTY.toLowerCase()}.json`)
     await uploadQuestions(filename, { target: TARGET })
   } 
   

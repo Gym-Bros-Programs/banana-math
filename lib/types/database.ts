@@ -42,7 +42,7 @@ export interface Question {
   question_text: string
   correct_answer: string
   has_negatives: boolean
-  difficulty: number
+  difficulty: string
   created_at: string
 }
 
@@ -79,7 +79,7 @@ export interface SessionAnswer {
 // ─── Joined types (for UI rendering) ───────────────────────────────────────
 
 export interface SessionAnswerWithQuestion extends SessionAnswer {
-  question: Question
+  question: Question | null
 }
 
 export interface SessionWithAnswers extends Session {
@@ -179,6 +179,7 @@ export type Database = {
           p_operator_set: string[]
           p_allow_negatives: boolean
           p_limit: number
+          p_difficulty?: string
         }
         Returns: Question[]
       }

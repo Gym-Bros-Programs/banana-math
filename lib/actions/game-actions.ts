@@ -19,27 +19,20 @@ export async function getQuestionsForSession(config: SessionConfig, difficulty: 
 
   const sortedOperatorSet = [...config.operatorSet].sort() as QuestionSubType[]
 
-  const difficultyMapping: Record<Difficulty, number> = {
-    Easy: 4,    // e.g. 9 + 9 = 18 -> 1+1+2 = 4
-    Medium: 6,  // e.g. 99 + 9 = 108 -> 2+1+3 = 6
-    Hard: 8,    // e.g. 99 + 99 = 198 -> 2+2+3 = 7
-  }
-  const maxDiff = difficultyMapping[difficulty] ?? 4
-
   // Check if each requested operator has at least some questions in the DB
   const { data: counts, error: countError } = await supabase
     .from("questions")
     .select("sub_type")
     .in("sub_type", sortedOperatorSet)
     .eq("has_negatives", config.allowNegatives)
-    .lte("difficulty", maxDiff)
+    .eq("difficulty", difficulty)
 
   if (countError) {
     console.error("❌ DB Error checking question counts:", countError.message, countError.details)
     return []
   }
 
-  console.log(`📊 DB Check: Found ${counts.length} rows matching ops: ${sortedOperatorSet.join(", ")} at maxDiff: ${maxDiff}`)
+  console.log(`📊 DB Check: Found ${counts.length} rows matching ops: ${sortedOperatorSet.join(", ")} at difficulty: ${difficulty}`)
 
   // Ensure every requested operator is represented in the available pool
   const availableOps = new Set(counts.map(q => q.sub_type))
@@ -47,7 +40,7 @@ export async function getQuestionsForSession(config: SessionConfig, difficulty: 
 
   if (missingOps.length > 0) {
     console.warn(`Missing questions in DB for: ${missingOps.join(", ")} at ${difficulty} difficulty`)
-    return [] // UI will show "No questions found"
+    return []
   }
 
   const { data, error } = await supabase.rpc("get_questions_for_session", {
@@ -55,7 +48,7 @@ export async function getQuestionsForSession(config: SessionConfig, difficulty: 
     p_operator_set: sortedOperatorSet,
     p_allow_negatives: config.allowNegatives,
     p_limit: poolSize,
-    p_max_difficulty: maxDiff,
+    p_difficulty: difficulty,
   })
 
   if (error || !data || data.length === 0) {
@@ -234,7 +227,7 @@ function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "E
       question_text: "1 + 1 = ?",
       correct_answer: "2",
       has_negatives: false,
-      difficulty: 1,
+      difficulty: "Easy",
       created_at: new Date().toISOString()
     }))
   }
