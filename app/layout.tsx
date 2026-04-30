@@ -10,7 +10,12 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Banana Math",
-  description: "The fastest way to learn mental math"
+  description: "The fastest way to learn mental math",
+  icons: {
+    icon: [{ url: "/sgbanananananana.svg", type: "image/svg+xml" }],
+    shortcut: "/sgbanananananana.svg",
+    apple: "/sgbanananananana.svg"
+  }
 }
 
 import Navbar from "@/components/Navbar"

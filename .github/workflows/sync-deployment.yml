@@ -4,27 +4,46 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: sync-deployment
+  cancel-in-progress: true
 
 jobs:
   sync:
-    # Only run if the repository is the org repo
+    # Only run from the org source repo. The deployment fork should not sync back.
     if: github.repository == 'Gym-Bros-Programs/banana-math'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code
+      - name: Check deployment token
+        run: |
+          if [ -z "$DEPLOYMENT_SYNC_TOKEN" ] && [ -z "$PERSONAL_ACCESS_TOKEN" ]; then
+            echo "Missing deployment sync token."
+            echo "Set DEPLOYMENT_SYNC_TOKEN, or keep existing PERSONAL_ACCESS_TOKEN."
+            echo "Token needs Contents: Read and write on Micsushi/banana-math-deployment."
+            exit 1
+          fi
+        env:
+          DEPLOYMENT_SYNC_TOKEN: ${{ secrets.DEPLOYMENT_SYNC_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Checkout source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          persist-credentials: false
 
       - name: Configure Git
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
 
-      - name: Push to private fork
+      - name: Push main to deployment fork
         env:
-          PERSONAL_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          DEPLOYMENT_SYNC_TOKEN: ${{ secrets.DEPLOYMENT_SYNC_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          DEPLOYMENT_REPO: Micsushi/banana-math-deployment
         run: |
-          git remote add destination "https://${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/Micsushi/banana-math-deployment.git"
-          git push destination main:main --force
+          TOKEN="${DEPLOYMENT_SYNC_TOKEN:-$PERSONAL_ACCESS_TOKEN}"
+          git push --force "https://x-access-token:${TOKEN}@github.com/${DEPLOYMENT_REPO}.git" HEAD:main
