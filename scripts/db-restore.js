@@ -1,15 +1,12 @@
 /**
  * db-restore.js
- * Uses the Supabase Management API to restore a paused project,
- * then optionally runs the schema reset + seed.
+ * Uses the Supabase Management API to restore a paused project.
  *
  * Usage:
- *   npm run db:restore          -- restore project, then run full reset
- *   npm run db:restore:only     -- restore project only (no schema/seed)
+ *   npm run db:restore
  *
  * Required in .env.local:
  *   NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
- *   SUPABASE_SERVICE_KEY=       <-- service_role key
  *   SUPABASE_ACCESS_TOKEN=      <-- Personal Access Token from supabase.com/dashboard/account/tokens
  *
  * How it works:
@@ -17,21 +14,19 @@
  *   2. Calls GET  /v1/projects/{ref}  to check current status
  *   3. If status is "INACTIVE" (paused), calls POST /v1/projects/{ref}/restore
  *   4. Polls GET  /v1/projects/{ref}  until status is "ACTIVE_HEALTHY"
- *   5. Optionally hands off to db-reset.js to rebuild schema + seed
  *
  * NOTE: If the project has been paused for 90+ days it is DELETED by Supabase
  * and cannot be restored. In that case you must create a new project manually,
- * update your .env.local, and then run `npm run db:reset`.
+ * update your .env.local, and then apply migrations from the Supabase dashboard
+ * or CLI.
  */
 
-const { execSync } = require("child_process")
 const path = require("path")
 
 require("dotenv").config({ path: path.resolve(process.cwd(), ".env.local") })
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN
-const SKIP_RESET = process.argv.includes("--only")
 
 const MGMT_API = "https://api.supabase.com"
 const POLL_INTERVAL_MS = 5000 // check every 5 seconds
@@ -97,7 +92,6 @@ async function main() {
 
   console.log(`\n🍌 banana-math DB Restore`)
   console.log(`   Project ref : ${ref}`)
-  console.log(`   Skip reset  : ${SKIP_RESET}`)
 
   // 1. Check current project status
   console.log("\n🔍 Checking project status...")
@@ -131,7 +125,6 @@ async function main() {
   // 2. If already active, nothing to do
   if (currentStatus === "ACTIVE_HEALTHY") {
     console.log("\n✅ Project is already active and healthy!")
-    if (!SKIP_RESET) runReset()
     return
   }
 
@@ -171,19 +164,7 @@ async function main() {
     }
   }
 
-  // 5. Optionally run schema reset
-  if (!SKIP_RESET) runReset()
-  else console.log("\n⏭️  Skipping schema reset (--only flag).\n")
-}
-
-function runReset() {
-  console.log("\n🔄 Running schema reset + seed...")
-  try {
-    execSync("node scripts/db-reset.js", { stdio: "inherit" })
-  } catch {
-    console.error("\n❌ db-reset.js failed. Run `npm run db:reset` manually.")
-    process.exit(1)
-  }
+  console.log("\n✅ Restore complete.\n")
 }
 
 main().catch((err) => {

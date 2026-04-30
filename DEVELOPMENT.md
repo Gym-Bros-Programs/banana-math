@@ -1,50 +1,93 @@
 # Banana Math Development
 
-## Operational Modes
+## Run Modes
 
-The application supports four operational modes to facilitate development without constant database reliance. These are controlled via `.env.local`.
+Use these scripts instead of editing flags by hand:
 
-1. **UI Only** (`npm run dev`): Set `NEXT_PUBLIC_MOCK_DB=true` and `NEXT_PUBLIC_MOCK_AUTH=true`. No Supabase calls; everything runs locally.
-2. **Fake Auth** (default `.env.local`): Set `NEXT_PUBLIC_MOCK_AUTH=true`. Real local DB, dummy user bypasses login.
-3. **Full Local** (`npm run dev:db`): No mock flags. Connects to local Supabase (Docker). Requires `npx supabase start`.
-4. **Cloud** (`npm run dev:cloud`): No mock flags. Connects to cloud Supabase using `NEXT_PUBLIC_SUPABASE_CLOUD_URL` and `NEXT_PUBLIC_SUPABASE_CLOUD_ANON_KEY` from `.env.local`. Real auth enabled.
-5. **Production**: Standard deployment configuration.
+| Mode           | Command                                   | Database               | Auth                   |
+| -------------- | ----------------------------------------- | ---------------------- | ---------------------- |
+| UI only        | `npm run dev`                             | Mock data              | Mock user              |
+| Local Supabase | `npm run db:start`, then `npm run dev:db` | Local Supabase         | Local auth             |
+| Cloud Supabase | `npm run dev:cloud`                       | Cloud Supabase         | Cloud auth             |
+| Production     | `npm run build && npm run start`          | Configured environment | Configured environment |
+
+`npm run dev:cloud` reads `NEXT_PUBLIC_SUPABASE_CLOUD_URL` and `NEXT_PUBLIC_SUPABASE_CLOUD_ANON_KEY`, then exposes them to the app as the standard Supabase public URL and anon key.
+
+## Environment
+
+Start from `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+Local Supabase normally uses:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<local anon key from npx supabase status>
+SUPABASE_SERVICE_KEY=<local service role key from npx supabase status>
+```
+
+Cloud uploads use:
+
+```env
+SUPABASE_URL_PROD=https://<project-ref>.supabase.co
+SUPABASE_SERVICE_KEY_PROD=<cloud service role key>
+```
 
 ## Question Generation
 
-Questions are pre-generated and seeded into the database per difficulty tier. Each operation is capped at **20,000 questions** — if the full combination space exceeds that, a random sample is taken.
+Questions are generated into JSON files under `scripts/question-gen/output` and uploaded with the service role key.
 
-### Operand ranges by difficulty
+Each operation is capped at 20,000 questions. If a generated pool is larger, the generator samples 20,000 rows.
 
-| Difficulty | Add / Sub operands | Mul / Div operand pairs           |
-| ---------- | ------------------ | --------------------------------- |
-| Easy       | 0–9                | 1d×1d (0–9 × 0–9)                 |
-| Medium     | 10–99              | 1d×2d, 2d×1d, 2d×2d               |
-| Hard       | 100–999            | 1d×3d, 3d×1d, 2d×3d, 3d×2d, 3d×3d |
+| Difficulty | Add / Sub operands | Mul / Div operand pairs                     |
+| ---------- | ------------------ | ------------------------------------------- |
+| Easy       | 0-9                | 1d x 1d                                     |
+| Medium     | 10-99              | 1d x 2d, 2d x 1d, 2d x 2d                   |
+| Hard       | 100-999            | 1d x 3d, 3d x 1d, 2d x 3d, 3d x 2d, 3d x 3d |
 
-**Both directions** are always generated for multiplication and division — `5 × 123` and `123 × 5` are separate questions. For division, each mul pair `(a, b)` produces two questions: `(a×b) ÷ b = a` and `(a×b) ÷ a = b`.
-
-Subtraction excludes negative results (only `a ≥ b` pairs kept). Division excludes zero operands.
-
-### Seed commands
+Commands:
 
 ```bash
-npm run db:generate:easy    # generate Easy questions locally
-npm run db:seed:prod        # upload Easy to cloud
+npm run db:generate:easy
 npm run db:generate:medium
-npm run db:seed:medium:prod
 npm run db:generate:hard
-npm run db:seed:hard:prod
+
+npm run db:seed
+npm run db:seed:medium
+npm run db:seed:hard
 ```
 
-To wipe all questions from cloud DB: `DELETE FROM questions;` in Supabase SQL editor. This sets `question_id` to NULL on existing session_answers (preserving session scores) rather than deleting them.
+Cloud commands:
 
-## Database Resilience
+```bash
+npm run db:seed:prod
+npm run db:seed:medium:prod
+npm run db:seed:hard:prod
+npm run db:seed:all
+```
 
-Database interactions use an automatic fallback system. If the Supabase project is unreachable or credentials are missing, the system defaults to the local arithmetic generator (`lib/questions/arithmetic-generator.ts`) to ensure the game remains playable.
+## Database Reset
 
-## Session Management
+Local schema comes from `supabase/migrations`.
 
-- **Guests**: Progress is stored in `localStorage` (up to 3 sessions).
-- **Authenticated Users**: Progress is synced to the Supabase `sessions` table.
-- **Migration**: Guest data is intended to be merged upon first login (Stage 4).
+```bash
+npm run db:reset
+npm run db:schema
+```
+
+To remove cloud questions while preserving completed session rows, run this in the Supabase SQL editor:
+
+```sql
+DELETE FROM questions;
+```
+
+The `session_answers.question_id` foreign key uses `ON DELETE SET NULL`.
+
+## Fallbacks
+
+If Supabase is unavailable or credentials are missing, the app falls back to `lib/questions/arithmetic-generator.ts` so practice sessions still work.
+
+Guest sessions are stored in `localStorage`. Signed-in sessions sync to Supabase.

@@ -1,9 +1,9 @@
 -- ============================================================
 -- banana-math: Full Schema v2
--- Run this after the original scaffold migration
+-- Replaces the initial prototype schema.
 -- ============================================================
 
--- ─── Drop old tables (safe, cascade will handle FKs) ────────
+-- Remove prototype tables before creating the current schema.
 DROP TABLE IF EXISTS user_answers CASCADE;
 DROP TABLE IF EXISTS attempts CASCADE;
 

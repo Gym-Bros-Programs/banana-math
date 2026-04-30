@@ -1,66 +1,70 @@
 # Banana Math
 
-A high-performance mental math practice platform focused on speed and simplicity.
+Mental math practice app built with Next.js, Supabase, and Tailwind CSS.
 
-## Project Roadmap
+## Features
 
-- **Stage 1**: Core arithmetic engine (client-side).
-- **Stage 2**: Backend API for question delivery and scoring.
-- **Stage 3**: Persistent database and global leaderboards.
-- **Stage 4**: User authentication and detailed statistics.
-- **Stage 5**: Launch.
+- Timed and fixed-length arithmetic sessions
+- Addition, subtraction, multiplication, and division practice
+- Easy, Medium, and Hard question pools
+- Guest play with local session history
+- Supabase auth, profiles, attempts, and leaderboard data
+- Mock mode for frontend work without a running database
 
-For detailed information on the operational modes and local setup, see [DEVELOPMENT.md](./DEVELOPMENT.md).
+## Requirements
 
-## Run locally
+- Node.js 20+
+- npm
+- Docker, for local Supabase
+- Supabase CLI, run with `npx supabase`
 
-Have a look at the .env.sample file and follow the steps in the link to create a .env.local
+## Setup
 
-Local compiling
-
+```bash
+npm install
+cp .env.example .env.local
 ```
-brew install npm
-npm install next
-npm run dev
+
+Fill in `.env.local` for whichever mode you use. The default `npm run dev` path does not need Supabase credentials.
+
+## Development
+
+```bash
+npm run dev        # UI-only mock mode
+npm run db:start   # start local Supabase
+npm run dev:db     # app + local Supabase
+npm run dev:cloud  # app + cloud Supabase
 ```
 
-Local compiling using docker
+More details live in [DEVELOPMENT.md](./DEVELOPMENT.md).
 
+## Database
+
+```bash
+npm run db:reset           # reset local Supabase from migrations
+npm run db:schema          # reset local schema without seed.sql
+npm run db:generate:easy   # write Easy questions to scripts/question-gen/output
+npm run db:seed            # upload Easy questions to local Supabase
+npm run db:seed:all        # generate and upload Easy, Medium, Hard to cloud
 ```
+
+Production uploads use `SUPABASE_URL_PROD` and `SUPABASE_SERVICE_KEY_PROD`.
+
+## Quality Checks
+
+```bash
+npm run lint
+npm run format:check
+npm run typecheck
+npm test -- --run
+npm run build
+```
+
+`npm run ci` runs the full check set.
+
+## Docker
+
+```bash
 docker build . -t banana-math
-docker run -d -p 3000:3000 banana-math
-```
-
-## Linting
-
-Run `npm run lint` for manually linting or to configure VS Code for Auto-Linting on save follow these steps:
-
-A. Install VS Code Extensions
-
-- ESLint (by Microsoft)
-- Prettier - Code formatter (by Prettier)
-
-B. Modify VS Code Settings
-You need to tell VS Code to use ESLint to fix your files whenever you save them.
-
-- In VS Code, press Ctrl + Shift + P (or Cmd + Shift + P on Mac) to open the Command Palette.
-- Type Preferences: Open User Settings (JSON) and press Enter.
-- Add the following configuration to your settings.json file:
-
-```
-{
-  // ... your other settings
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ]
-  // ... your other settings
-}
+docker run -p 3000:3000 banana-math
 ```

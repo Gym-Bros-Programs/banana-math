@@ -1,55 +1,62 @@
-# Banana-Math Question System
+# Question Generator
 
-A modular system for generating and uploading math questions to Supabase (Local or Production).
+Generates arithmetic question pools and uploads them to Supabase.
 
-## Structure
+## Files
 
-- `index.js`: Main entry point and dispatcher.
-- `generators/`: Specific question generation logic.
-  - `arithmetic.js`: Handles +, -, \*, /.
-- `db/`: Database operations.
-  - `uploader.js`: Handles bulk upserts to Supabase.
-- `output/`: Generated JSON files.
+- `index.js`: command dispatcher
+- `generators/arithmetic.js`: arithmetic pool generator
+- `db/uploader.js`: Supabase bulk uploader
+- `output/`: generated JSON files
 
-## Usage
-
-### 1. Generate Questions
-
-Generate questions for different difficulty levels:
+## Generate
 
 ```bash
-npm run db:generate:easy   # 1-digit +/-
-npm run db:generate:medium # 2-digit +/-/*//
-npm run db:generate:hard   # 3-digit +/-/*//
+npm run db:generate:easy
+npm run db:generate:medium
+npm run db:generate:hard
 ```
 
-You can also run manually for more control:
+Manual use:
 
 ```bash
-node scripts/question-gen/index.js generate --difficulty=Easy --ops=addition --allow-negatives=true
+node scripts/question-gen/index.js generate --difficulty=Easy --ops=addition,subtraction --dry-run
+node scripts/question-gen/index.js generate --difficulty=Medium --ops=addition,subtraction,multiplication,division
 ```
 
-### 2. Upload to Database
+## Upload
 
-The system targets your local Supabase by default (using `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`).
+Local Supabase:
 
 ```bash
-npm run db:seed        # Upload Easy questions to local
-npm run db:seed:medium # Upload Medium questions to local
+npm run db:seed
+npm run db:seed:medium
+npm run db:seed:hard
 ```
 
-#### Targeting Production
-
-To target production, ensure you have `SUPABASE_URL_PROD` and `SUPABASE_SERVICE_KEY_PROD` in your `.env.local`, then run:
+Cloud Supabase:
 
 ```bash
-npm run db:seed:prod -- scripts/question-gen/output/questions_easy.json
+npm run db:seed:prod
+npm run db:seed:medium:prod
+npm run db:seed:hard:prod
 ```
 
-## Rules & Difficulty
+Required `.env.local` keys:
 
-- **Easy**: Operands 0-9.
-- **Medium**: Operands 0-99.
-- **Hard**: Operands 0-999.
-- **No Negatives**: By default, subtraction ensures `a >= b`.
-- **Integers Only**: Decimal support coming soon.
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
+
+SUPABASE_URL_PROD=
+SUPABASE_SERVICE_KEY_PROD=
+```
+
+## Rules
+
+- Easy: 0-9 add/sub operands, 1-digit multiply/divide pairs
+- Medium: 10-99 add/sub operands, 1d/2d multiply/divide pairs
+- Hard: 100-999 add/sub operands, up to 3d/3d multiply/divide pairs
+- Subtraction excludes negative answers unless `--allow-negatives=true`
+- Division is generated from multiplication pairs so answers are integers
+- Each operation is capped at 20,000 questions

@@ -1,5 +1,4 @@
--- Migration Scaffolding
--- Put your database changes (tables, rpc, etc) here
+-- Initial tables used by the first local prototype.
 
 CREATE TABLE IF NOT EXISTS attempts (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -19,13 +18,11 @@ CREATE TABLE IF NOT EXISTS user_answers (
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Example RPC function
 CREATE OR REPLACE FUNCTION get_random_question()
 RETURNS json
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  -- Dummy fallback for testing
   RETURN '[{"id": "test-1", "question_text": "5 + 5", "correct_answer": "10"}]'::json;
 END;
 $$;
