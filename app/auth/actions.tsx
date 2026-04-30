@@ -137,9 +137,10 @@ export async function signInWithGoogle() {
   const isMockDb = process.env.NEXT_PUBLIC_MOCK_DB === "true"
   const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
   const isGoogleAuthDisabled = process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH === "true"
+  const isGoogleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true"
 
-  if (isMockDb || isMockAuth || isGoogleAuthDisabled) {
-    return redirect("/login?message=Google Sign In is not available during local testing.")
+  if (isMockDb || isMockAuth || isGoogleAuthDisabled || !isGoogleAuthEnabled) {
+    return redirect("/login?message=Google Sign In is not available.")
   }
 
   const origin = headers().get("origin")

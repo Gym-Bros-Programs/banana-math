@@ -62,6 +62,7 @@ describe("auth actions", () => {
         }))
       }))
     })
+    delete process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH
     delete process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH
     delete process.env.NEXT_PUBLIC_MOCK_AUTH
     delete process.env.NEXT_PUBLIC_MOCK_DB
@@ -97,10 +98,33 @@ describe("auth actions", () => {
     process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH = "true"
 
     await expect(signInWithGoogle()).rejects.toThrow(
-      "NEXT_REDIRECT:/login?message=Google Sign In is not available during local testing."
+      "NEXT_REDIRECT:/login?message=Google Sign In is not available."
     )
 
     expect(mocks.supabase.auth.signInWithOAuth).not.toHaveBeenCalled()
+  })
+
+  it("blocks Google auth unless it is explicitly enabled", async () => {
+    await expect(signInWithGoogle()).rejects.toThrow(
+      "NEXT_REDIRECT:/login?message=Google Sign In is not available."
+    )
+
+    expect(mocks.supabase.auth.signInWithOAuth).not.toHaveBeenCalled()
+  })
+
+  it("starts Google auth when explicitly enabled", async () => {
+    process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH = "true"
+
+    await expect(signInWithGoogle()).rejects.toThrow(
+      "NEXT_REDIRECT:https://accounts.google.com/o/oauth2/v2/auth"
+    )
+
+    expect(mocks.supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
+      options: {
+        redirectTo: "http://localhost:3000/auth/callback"
+      }
+    })
   })
 
   it("shows an error when signup username is already taken", async () => {
