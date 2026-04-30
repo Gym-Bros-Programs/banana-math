@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+
 import { getQuestionsForSession, createSession, getUserSessions } from "./game-actions"
+import { getQuestionPoolSize } from "./question-pool"
 
 // Mock next/cache
 vi.mock("next/cache", () => ({
@@ -30,6 +32,28 @@ describe("Game Actions", () => {
 
     expect(questions[0].id).toBe("mock-q-0")
     expect(questions[0].question_text).toBe("1 + 1 = ?")
+  })
+
+  it("sizes question pools from selected question count or timed seconds", () => {
+    expect(
+      getQuestionPoolSize({
+        category: "arithmetic",
+        operatorSet: ["addition"],
+        allowNegatives: false,
+        sessionMode: "fixed",
+        questionLimit: 10
+      })
+    ).toBe(10)
+
+    expect(
+      getQuestionPoolSize({
+        category: "arithmetic",
+        operatorSet: ["addition"],
+        allowNegatives: false,
+        sessionMode: "timed",
+        durationSeconds: 15
+      })
+    ).toBe(75)
   })
 
   it("createSession adds a session to the mock list in MOCK_DB mode", async () => {

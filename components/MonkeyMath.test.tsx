@@ -75,4 +75,30 @@ describe("MonkeyMath Component", () => {
       expect(gameActions.getQuestionsForSession).toHaveBeenCalled()
     })
   })
+
+  it("prefetches questions without showing them before Start", async () => {
+    render(<MonkeyMath />)
+
+    await waitFor(() => {
+      expect(gameActions.getQuestionsForSession).toHaveBeenCalledTimes(1)
+    })
+
+    expect(screen.queryByText("2 + 2")).not.toBeInTheDocument()
+  })
+
+  it("starts from prefetched questions without an extra fetch and refills the cache", async () => {
+    render(<MonkeyMath />)
+
+    await waitFor(() => {
+      expect(gameActions.getQuestionsForSession).toHaveBeenCalledTimes(1)
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("Start"))
+    })
+
+    await waitFor(() => {
+      expect(gameActions.getQuestionsForSession).toHaveBeenCalledTimes(2)
+    })
+  })
 })

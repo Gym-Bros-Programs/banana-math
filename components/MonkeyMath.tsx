@@ -40,6 +40,12 @@ interface AnswerRecord {
   question: Question
 }
 
+interface PrefetchState {
+  key: string
+  pool?: Question[]
+  promise?: Promise<Question[]>
+}
+
 function saveGuestSession(s: any) {
   if (typeof window === "undefined") return
   const prev: any[] = JSON.parse(localStorage.getItem(GUEST_STORAGE_KEY) ?? "[]")
@@ -101,6 +107,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
   const [poolError, setPoolError] = useState<string | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
+  const prefetchRef = useRef<PrefetchState | null>(null)
 
   // Auto-focus input whenever a new question appears
   useEffect(() => {
@@ -172,6 +179,63 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     }
   }
 
+  function getPoolCacheKey(config: SessionConfig, difficulty: Difficulty) {
+    return JSON.stringify({
+      category: config.category,
+      operatorSet: [...config.operatorSet].sort(),
+      allowNegatives: config.allowNegatives,
+      sessionMode: config.sessionMode,
+      durationSeconds: config.durationSeconds ?? null,
+      questionLimit: config.questionLimit ?? null,
+      difficulty
+    })
+  }
+
+  const prefetchQuestions = useCallback((config: SessionConfig, difficulty: Difficulty) => {
+    const key = getPoolCacheKey(config, difficulty)
+    const current = prefetchRef.current
+
+    if (current?.key === key && (current.pool || current.promise)) {
+      return current.promise ?? Promise.resolve(current.pool ?? [])
+    }
+
+    const promise = getQuestionsForSession(config, difficulty)
+      .then((pool) => {
+        if (prefetchRef.current?.key === key) {
+          prefetchRef.current = { key, pool }
+        }
+        return pool
+      })
+      .catch((error) => {
+        if (prefetchRef.current?.key === key) {
+          prefetchRef.current = null
+        }
+        console.error("Failed to prefetch questions:", error)
+        return []
+      })
+
+    prefetchRef.current = { key, promise }
+    return promise
+  }, [])
+
+  function startWithPool(pool: Question[]) {
+    setPoolError(null)
+    setQuestionPool(pool)
+    setAnswers([])
+    setPoolIndex(0)
+    setPenaltyCount(0)
+    setLastPenalty(null)
+
+    if (selectedMode === "timed") {
+      setTimeLeft(selectedLength)
+    } else {
+      setTimeElapsed(0)
+    }
+    setTimerActive(true)
+    setPhase("playing")
+    nextQuestion(pool, 0)
+  }
+
   const nextQuestion = useCallback((pool: Question[], idx: number) => {
     if (idx < pool.length) {
       setCurrentQuestion(pool[idx])
@@ -207,12 +271,26 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, phase])
 
-  function handleStart() {
-    if (activeOps.length === 0) return
+  useEffect(() => {
+    if (phase !== "settings" || activeOps.length === 0) return
+
+    prefetchQuestions(buildConfig(), selectedDifficulty)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, selectedType, selectedDifficulty, selectedLength, selectedMode, prefetchQuestions])
+
+  async function handleStart() {
+    if (activeOps.length === 0 || isLoadingPool) return
     setIsLoadingPool(true)
 
     const config = buildConfig()
-    getQuestionsForSession(config, selectedDifficulty).then((pool) => {
+    const key = getPoolCacheKey(config, selectedDifficulty)
+    const cached = prefetchRef.current?.key === key ? prefetchRef.current : null
+
+    try {
+      const pool =
+        cached?.pool ??
+        (await (cached?.promise ?? getQuestionsForSession(config, selectedDifficulty)))
+
       if (pool.length === 0) {
         setPoolError(
           `No ${selectedDifficulty} questions found for ${selectedType} in the database.`
@@ -221,23 +299,16 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
         return
       }
 
-      setPoolError(null)
-      setQuestionPool(pool)
-      setAnswers([])
-      setPoolIndex(0)
-      setPenaltyCount(0)
-      setLastPenalty(null)
-
-      if (selectedMode === "timed") {
-        setTimeLeft(selectedLength)
-      } else {
-        setTimeElapsed(0)
-      }
-      setTimerActive(true)
-      setPhase("playing")
-      nextQuestion(pool, 0)
+      startWithPool(pool)
       setIsLoadingPool(false)
-    })
+
+      prefetchRef.current = null
+      prefetchQuestions(config, selectedDifficulty)
+    } catch (error) {
+      console.error("Failed to start session:", error)
+      setPoolError(`No ${selectedDifficulty} questions found for ${selectedType} in the database.`)
+      setIsLoadingPool(false)
+    }
   }
 
   async function handleSubmit(e: FormEvent) {

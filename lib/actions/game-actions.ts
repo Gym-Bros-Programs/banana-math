@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 
-import { createClient } from "@/lib/supabase/server"
+import { getQuestionPoolSize } from "@/lib/actions/question-pool"
 import { generateLocalQuestionPool } from "@/lib/questions/arithmetic-generator"
 import type { Difficulty } from "@/lib/questions/arithmetic-generator"
+import { createClient } from "@/lib/supabase/server"
 import type { SessionConfig, Question, QuestionSubType } from "@/lib/types/database"
 
 // Fetch a deduplicated question pool for a session
@@ -18,43 +19,8 @@ export async function getQuestionsForSession(
 
   const supabase = createClient()
 
-  // Pool size: for timed sessions fetch generously; for fixed fetch exact count
-  const poolSize =
-    config.sessionMode === "fixed"
-      ? (config.questionLimit ?? 20)
-      : Math.max(50, (config.durationSeconds ?? 60) * 2) // ~2 questions per second max
-
+  const poolSize = getQuestionPoolSize(config)
   const sortedOperatorSet = [...config.operatorSet].sort() as QuestionSubType[]
-
-  // Check if each requested operator has at least some questions in the DB
-  const { data: counts, error: countError } = await supabase
-    .from("questions")
-    .select("sub_type")
-    .in("sub_type", sortedOperatorSet)
-    .eq("has_negatives", config.allowNegatives)
-    .eq("difficulty", difficulty)
-
-  if (countError) {
-    console.error("❌ DB Error checking question counts:", countError.message, countError.details)
-    return []
-  }
-
-  console.log(
-    `📊 DB Check: Found ${counts.length} rows matching ops: ${sortedOperatorSet.join(", ")} at difficulty: ${difficulty}`
-  )
-
-  // Ensure every requested operator is represented in the available pool
-  const availableOps = new Set(
-    (counts as Array<{ sub_type: QuestionSubType }>).map((q) => q.sub_type)
-  )
-  const missingOps = sortedOperatorSet.filter((op) => !availableOps.has(op))
-
-  if (missingOps.length > 0) {
-    console.warn(
-      `Missing questions in DB for: ${missingOps.join(", ")} at ${difficulty} difficulty`
-    )
-    return []
-  }
 
   const { data, error } = await supabase.rpc("get_questions_for_session", {
     p_category: config.category,
@@ -237,7 +203,7 @@ function isLeaderboardEligible(config: SessionConfig): boolean {
 function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "Easy"): Question[] {
   // If in UI testing mode, just return bare minimum 1+1=2 questions
   if (process.env.NEXT_PUBLIC_MOCK_DB === "true") {
-    const poolSize = config.sessionMode === "fixed" ? (config.questionLimit ?? 20) : 100
+    const poolSize = getQuestionPoolSize(config)
     return Array(poolSize)
       .fill(null)
       .map((_, i) => ({
@@ -256,10 +222,7 @@ function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "E
   }
 
   // Generates a real playable pool locally — game works without any DB connection
-  const poolSize =
-    config.sessionMode === "fixed"
-      ? (config.questionLimit ?? 20)
-      : Math.max(60, (config.durationSeconds ?? 60) * 2)
+  const poolSize = getQuestionPoolSize(config)
   return generateLocalQuestionPool(config, poolSize, difficulty)
 }
 
