@@ -21,7 +21,7 @@ jobs:
           if [ -z "$DEPLOYMENT_SYNC_TOKEN" ] && [ -z "$PERSONAL_ACCESS_TOKEN" ]; then
             echo "Missing deployment sync token."
             echo "Set DEPLOYMENT_SYNC_TOKEN, or keep existing PERSONAL_ACCESS_TOKEN."
-            echo "Token needs Contents: Read and write on Micsushi/banana-math-deployment."
+            echo "Token needs Contents: Read and write and Workflows: Read and write on Micsushi/banana-math-deployment."
             exit 1
           fi
         env:
