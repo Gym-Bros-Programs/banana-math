@@ -78,6 +78,9 @@ export const createClient = () => {
       update:  () => mockQueryBuilder,
       upsert:  () => mockQueryBuilder,
       range:   () => mockQueryBuilder,
+      in:      () => mockQueryBuilder,
+      is:      () => mockQueryBuilder,
+      contains: () => mockQueryBuilder,
 
       insert: (data: any) => {
         return mockQueryBuilder

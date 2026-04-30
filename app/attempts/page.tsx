@@ -147,26 +147,30 @@ export default async function AttemptHistory({
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col pt-10 pb-8 font-['Inter']">
-      <div className="w-full">
-
+    <div
+      className="w-full flex flex-col pt-10 pb-4 font-['Inter'] overflow-hidden"
+      style={{ height: 'calc(100vh - 115px)' }}
+    >
+      <div className="w-full shrink-0">
         {/* Header */}
         <div className="border-b border-[#2C2920] pb-4 text-left">
           <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">Session History</h1>
           <p className="text-[#C8BCAD] mt-1 text-sm">Your past practice sessions</p>
         </div>
 
-        <FilterBar options={filterOptions} />
+        <FilterBar options={filterOptions} currentParams={searchParams} />
+      </div>
 
+      <div className="flex-1 overflow-y-auto mt-4 pr-2 space-y-2 scrollbar-thin scrollbar-thumb-[#2C2920] scrollbar-track-transparent">
         {sessions.length === 0 ? (
           <div className="text-center py-16 text-[#C8BCAD]">
             No sessions yet. Play a game to see your history here.
           </div>
         ) : (
-          <div className="space-y-2">
+          <>
             {sessions.map((session) => {
               const accuracy = Number(session.accuracy).toFixed(1)
-              const isGood   = session.accuracy >= 80
+              const isGood = session.accuracy >= 80
 
               return (
                 <details
@@ -232,11 +236,10 @@ export default async function AttemptHistory({
                             <span className="text-[9px] uppercase tracking-widest text-[#C8BCAD] font-bold">correct</span>
                           </div>
                           <div className="min-w-[42px] flex justify-center">
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded border font-black uppercase tracking-tighter ${
-                              session.difficulty === "Hard" ? "border-red-500/30 text-red-400 bg-red-500/5" :
-                              session.difficulty === "Medium" ? "border-orange-500/30 text-orange-400 bg-orange-500/5" :
-                              "border-[hsl(50,100%,52%)]/30 text-[hsl(50,100%,52%)] bg-[hsl(50,100%,52%)]/5"
-                            }`}>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded border font-black uppercase tracking-tighter ${session.difficulty === "Hard" ? "border-red-500/30 text-red-400 bg-red-500/5" :
+                                session.difficulty === "Medium" ? "border-orange-500/30 text-orange-400 bg-orange-500/5" :
+                                  "border-[hsl(50,100%,52%)]/30 text-[hsl(50,100%,52%)] bg-[hsl(50,100%,52%)]/5"
+                              }`}>
                               {session.difficulty === "Medium" ? "MED" : session.difficulty?.toUpperCase()}
                             </span>
                           </div>
@@ -256,36 +259,13 @@ export default async function AttemptHistory({
                         <div className="h-4 w-px bg-[#2C2920]" />
 
                         {/* Date Segment */}
-                        <span className="text-[#8B8476] text-sm font-normal whitespace-nowrap">
+                        <span suppressHydrationWarning className="text-[#8B8476] text-sm font-normal whitespace-nowrap">
                           {formatDate(session.completed_at)}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-6 text-right min-w-[140px] justify-end">
-                      {session.percentile !== null && (
-                        <div className="flex flex-col items-end">
-                          {(session.percentile ?? 0) <= 50 ? (
-                            <>
-                              <span className="text-[hsl(50,100%,52%)] font-black text-3xl leading-none">
-                                Top {(session.percentile ?? 0).toFixed(1)}%
-                              </span>
-                              <span className="text-[9px] text-[#C8BCAD] font-bold uppercase tracking-widest mt-1">
-                                vs same type
-                              </span>
-                            </>
-                          ) : (
-                            <div className="flex flex-col items-end">
-                              <span className="text-red-400 font-black text-lg leading-none">
-                                AVG-
-                              </span>
-                              <span className="text-[9px] text-red-400/50 font-bold uppercase tracking-widest mt-1">
-                                below average
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
                       <span className="text-[#2C2920] group-open:rotate-180 transition-transform text-xl">▼</span>
                     </div>
                   </summary>
@@ -316,9 +296,8 @@ export default async function AttemptHistory({
                                   {answer.question?.question_text ?? "—"}
                                 </td>
                                 <td
-                                  className={`py-2 border-r border-[#2C2920] px-4 ${
-                                    answer.is_correct ? "text-[hsl(50,100%,52%)]" : "text-red-400"
-                                  }`}
+                                  className={`py-2 border-r border-[#2C2920] px-4 ${answer.is_correct ? "text-[hsl(50,100%,52%)]" : "text-red-400"
+                                    }`}
                                 >
                                   {answer.user_answer}
                                 </td>
@@ -352,7 +331,7 @@ export default async function AttemptHistory({
                 </details>
               )
             })}
-          </div>
+          </>
         )}
       </div>
     </div>

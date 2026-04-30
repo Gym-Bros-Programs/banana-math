@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 
 import { createClient } from "@/lib/supabase/server"
 import { OPERATOR_PRESETS, LEADERBOARD_PRESETS } from "@/lib/types/database"
-import { formatOperatorSet } from "@/lib/formatters"
+import { formatOperatorSet, formatDate } from "@/lib/formatters"
 
 import FilterBar from "@/components/FilterBar"
 
@@ -93,7 +93,7 @@ export default async function AttemptHistory({
   // Find user's best entry and rank
   const userEntry = dedupedLeaderboard.find(e => e.user_id === user?.id)
   const userRank = userEntry ? dedupedLeaderboard.indexOf(userEntry) + 1 : null
-  const topN = dedupedLeaderboard.slice(0, 10)
+  const topN = dedupedLeaderboard.slice(0, 50)
 
   const filterOptions = [
     {
@@ -169,37 +169,42 @@ export default async function AttemptHistory({
   }
 
   return (
-    <div className="w-full flex-1 flex flex-col pt-10 pb-8 font-['Inter'] relative">
-      <div className="w-full pb-32">
+    <div 
+      className="w-full flex flex-col pt-10 pb-4 font-['Inter'] relative overflow-hidden"
+      style={{ height: 'calc(100vh - 115px)' }}
+    >
+      <div className="w-full shrink-0">
         <div className="border-b border-[#2C2920] pb-4 text-left">
           <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">Leaderboard</h1>
-          <p className="text-[#C8BCAD] mt-1 text-sm">Global ranking by score (Top 10)</p>
+          <p className="text-[#C8BCAD] mt-1 text-sm">Global ranking by score (Top 50)</p>
         </div>
 
-        <FilterBar options={filterOptions} />
-        <div className="overflow-x-auto rounded-md border border-[#2C2920] bg-[#17150F]">
-          <table className="min-w-full">
-            <thead>
-              <tr>
-                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+        <FilterBar options={filterOptions} currentParams={searchParams} />
+      </div>
+
+      <div className="flex-1 overflow-auto rounded-md border border-[#2C2920] bg-[#17150F] scrollbar-thin scrollbar-thumb-[#2C2920] scrollbar-track-transparent mt-4 mb-24 relative">
+        <table className="min-w-full relative">
+          <thead className="sticky top-0 z-20">
+            <tr>
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-center text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Rank
                 </th>
-                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-center text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   User ID
                 </th>
-                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-center text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
-                  Diff
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-center text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                  Difficulty
                 </th>
-                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-center text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Score
                 </th>
-                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-r border-[#2C2920] bg-[#211E17] text-center text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Accuracy
                 </th>
-                <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-left text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
+                <th className="px-6 py-4 border-b border-[#2C2920] bg-[#211E17] text-center text-sm font-semibold text-[#C8BCAD] uppercase tracking-wider">
                   Date
                 </th>
               </tr>
@@ -209,59 +214,32 @@ export default async function AttemptHistory({
                 const isUser = entry.user_id === user?.id || entry.user_email === "you@local.test"
                 return (
                   <tr key={index} className={`hover:bg-[#211E17] transition-colors ${isUser ? "bg-[#211E17]/50" : ""}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD] border-r border-[#2C2920]">
+                    <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD] border-r border-[#2C2920] text-center">
                       #{index + 1}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-[#EDE6DA] border-r border-[#2C2920]">
+                    <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-[#EDE6DA] border-r border-[#2C2920] text-center">
                       {entry.user_id ? (profileMap[entry.user_id] || "Unknown") : "Guest"} {isUser && "(You)"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#C8BCAD] border-r border-[#2C2920]">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#C8BCAD] border-r border-[#2C2920] text-center">
                       {formatOperatorSet(entry.operator_set)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs font-bold border-r border-[#2C2920]">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs font-bold border-r border-[#2C2920] text-center">
                       <span className={`px-2 py-0.5 rounded border ${
                         entry.difficulty === "Hard" ? "border-red-500/30 text-red-400 bg-red-500/5" :
                         entry.difficulty === "Medium" ? "border-orange-500/30 text-orange-400 bg-orange-500/5" :
                         "border-[hsl(50,100%,52%)]/30 text-[hsl(50,100%,52%)] bg-[hsl(50,100%,52%)]/5"
                       }`}>
-                        {entry.difficulty === "Medium" ? "MED" : entry.difficulty?.toUpperCase()}
+                        {entry.difficulty?.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-lg font-bold text-[hsl(50,100%,52%)] border-r border-[#2C2920]">
+                    <td className="px-6 py-4 whitespace-nowrap text-lg font-bold text-[hsl(50,100%,52%)] border-r border-[#2C2920] text-center">
                       {entry.cqpm ?? 0} QPM
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-[#2C2920]">
-                      <div className="flex items-center justify-center relative w-12 h-12 mx-auto">
-                        <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
-                          {/* Red track */}
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="24"
-                            stroke="#ef4444"
-                            strokeWidth="8"
-                            fill="transparent"
-                          />
-                          {/* Yellow progress */}
-                          <circle
-                            cx="28"
-                            cy="28"
-                            r="24"
-                            stroke="hsl(50,100%,52%)"
-                            strokeWidth="8"
-                            fill="transparent"
-                            strokeDasharray={150.8}
-                            strokeDashoffset={150.8 - (150.8 * (entry.accuracy ?? 0)) / 100}
-                            strokeLinecap="round"
-                          />
-                        </svg>
-                        <span className="absolute text-white font-black text-[10px]">
-                          {entry.accuracy ?? 0}%
-                        </span>
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap font-black text-lg text-[#EDE6DA] border-r border-[#2C2920] text-center">
+                      {entry.accuracy ?? 0}%
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD]">
-                      {entry.completed_at ? new Date(entry.completed_at).toLocaleDateString() : "N/A"}
+                    <td suppressHydrationWarning className="px-6 py-4 whitespace-nowrap text-base text-[#C8BCAD] text-center">
+                      {entry.completed_at ? formatDate(entry.completed_at) : "N/A"}
                     </td>
                   </tr>
                 )
@@ -276,7 +254,6 @@ export default async function AttemptHistory({
             </tbody>
           </table>
         </div>
-      </div>
 
       {/* Sticky Personal Rank */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#17150F] border-t border-[#2C2920] px-20 py-6 flex items-center justify-between z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">

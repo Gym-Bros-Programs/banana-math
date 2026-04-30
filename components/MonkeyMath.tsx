@@ -66,34 +66,10 @@ export default function MonkeyMath() {
     }
   }, [pathname, router, searchParams])
 
-  const [selectedType, setSelectedType] = useState<Type>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
-      if (saved) return JSON.parse(saved).type || "+ − × ÷"
-    }
-    return "+ − × ÷"
-  })
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
-      if (saved) return JSON.parse(saved).difficulty || "Easy"
-    }
-    return "Easy"
-  })
-  const [selectedLength, setSelectedLength] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
-      if (saved) return JSON.parse(saved).length || DEFAULT_TIME
-    }
-    return DEFAULT_TIME
-  })
-  const [selectedMode, setSelectedMode] = useState<Mode>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
-      if (saved) return JSON.parse(saved).mode || "timed"
-    }
-    return "timed"
-  })
+  const [selectedType, setSelectedType] = useState<Type>("+ − × ÷")
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("Easy")
+  const [selectedLength, setSelectedLength] = useState(DEFAULT_TIME)
+  const [selectedMode, setSelectedMode] = useState<Mode>("timed")
 
   const [questionPool, setQuestionPool] = useState<Question[]>([])
   const [poolIndex, setPoolIndex] = useState(0)
@@ -122,16 +98,28 @@ export default function MonkeyMath() {
     }
   }, [currentQuestion, phase])
 
+  // Load saved settings once after mount (avoids SSR/hydration mismatch)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed.type) setSelectedType(parsed.type)
+        if (parsed.difficulty) setSelectedDifficulty(parsed.difficulty)
+        if (parsed.mode) setSelectedMode(parsed.mode)
+        if (parsed.length) setSelectedLength(parsed.length)
+      }
+    } catch {}
+  }, [])
+
   // Persist settings to localStorage whenever they change
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({
-        type: selectedType,
-        difficulty: selectedDifficulty,
-        mode: selectedMode,
-        length: selectedLength
-      }))
-    }
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({
+      type: selectedType,
+      difficulty: selectedDifficulty,
+      mode: selectedMode,
+      length: selectedLength
+    }))
   }, [selectedType, selectedDifficulty, selectedMode, selectedLength])
 
   // Sync back button / URL changes

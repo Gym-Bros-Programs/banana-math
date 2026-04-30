@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import React, { useState, useRef, useEffect } from "react"
 
 interface FilterBarProps {
@@ -10,11 +10,11 @@ interface FilterBarProps {
     type?: "toggle" | "dropdown"
     values: { label: string, value: string }[]
   }[]
+  currentParams?: Record<string, string | undefined>
 }
 
-export default function FilterBar({ options }: FilterBarProps) {
+export default function FilterBar({ options, currentParams = {} }: FilterBarProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -29,7 +29,9 @@ export default function FilterBar({ options }: FilterBarProps) {
   }, [])
 
   function handleFilter(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(
+      Object.entries(currentParams).filter(([, v]) => v != null) as [string, string][]
+    )
     if (value === "all") {
       params.delete(key)
     } else {
@@ -43,7 +45,7 @@ export default function FilterBar({ options }: FilterBarProps) {
     <div className="flex flex-wrap gap-10 py-6 border-b border-[#2C2920]">
       {options.map((opt) => {
         const type = opt.type || "toggle"
-        const currentValue = searchParams.get(opt.key) || "all"
+        const currentValue = currentParams[opt.key] || "all"
         const currentLabel = opt.values.find(v => v.value === currentValue)?.label || "All"
 
         return (
@@ -78,8 +80,8 @@ export default function FilterBar({ options }: FilterBarProps) {
                   className="flex items-center gap-3 bg-[#17150F] px-4 py-1.5 text-xs rounded-lg border border-[#2C2920] text-[#EDE6DA] hover:border-[#C8BCAD] transition-all w-48"
                 >
                   <span className="flex-1 text-left">{currentLabel}</span>
-                  <svg 
-                    className={`w-3 h-3 text-[#C8BCAD] transition-transform ${openDropdown === opt.key ? "rotate-180" : ""}`} 
+                  <svg
+                    className={`w-3 h-3 text-[#C8BCAD] transition-transform ${openDropdown === opt.key ? "rotate-180" : ""}`}
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
                   >
                     <path d="m6 9 6 6 6-6" />
