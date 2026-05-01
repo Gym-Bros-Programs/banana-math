@@ -1,5 +1,7 @@
 import { SubmitButton } from "@/app/auth/submit-button"
+import { AuthAvailabilityField } from "@/components/AuthAvailabilityField"
 import { BackButton } from "@/components/BackButton"
+import { PasswordRequirementField } from "@/components/PasswordRequirementField"
 
 const FormField = ({
   name,
@@ -80,6 +82,12 @@ export default function LoginPage({ searchParams }: { searchParams: { message: s
     process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true" &&
     process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH !== "true"
 
+  console.log("DEBUG LOGIN PAGE:", {
+    NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH,
+    NEXT_PUBLIC_DISABLE_GOOGLE_AUTH: process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH,
+    isGoogleAuthEnabled
+  })
+
   return (
     <div className="flex-1 flex flex-col w-full items-center justify-center relative">
       <BackButton />
@@ -152,31 +160,20 @@ export default function LoginPage({ searchParams }: { searchParams: { message: s
               <h2 className="text-2xl font-semibold tracking-tight text-[#EDE6DA]">New User</h2>
               <p className="text-sm text-[#C8BCAD] mt-1">Create an account.</p>
             </div>
-            <FormField name="username" label="Username" placeholder="" />
-            <FormField name="email" label="Email" type="email" placeholder="" />
-            <div className="relative group">
-              <FormField
-                name="password"
-                label="Password"
-                type="password"
-                placeholder=""
-                props={{
-                  pattern:
-                    "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,}$",
-                  title:
-                    "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
-                }}
-              />
-              {/* Password Hint Popup - appears on focus */}
-              <div className="absolute left-full top-0 ml-6 w-64 p-4 bg-[#211E17] border border-[#2C2920] rounded-sm hidden group-focus-within:block z-50 shadow-2xl before:content-[''] before:absolute before:top-4 before:-left-2 before:w-4 before:h-4 before:bg-[#211E17] before:border-l before:border-b before:border-[#2C2920] before:rotate-45">
-                <ul className="text-xs text-[#C8BCAD] list-disc pl-4 space-y-1 relative z-10">
-                  <li>At least 8 characters long</li>
-                  <li>Include one lowercase & one uppercase letter</li>
-                  <li>Include one number</li>
-                  <li>Include one special character (!@#$%^&*)</li>
-                </ul>
-              </div>
-            </div>
+            <AuthAvailabilityField
+              name="username"
+              label="Username"
+              availabilityKind="username"
+              unavailableMessage="Username is already taken."
+            />
+            <AuthAvailabilityField
+              name="email"
+              label="Email"
+              type="email"
+              availabilityKind="email"
+              unavailableMessage="An account already exists for this email. Sign in instead."
+            />
+            <PasswordRequirementField />
             <SubmitButton
               formAction={handleSignUp}
               className="w-full bg-[#211E17] border border-[#2C2920] hover:bg-[#2C2920] rounded-sm h-12 text-[#EDE6DA] font-semibold transition-colors mt-2"

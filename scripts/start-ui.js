@@ -11,6 +11,7 @@ const proc = spawn("npx", ["next", "dev"], {
     ...process.env,
     NEXT_PUBLIC_MOCK_DB: "true",
     NEXT_PUBLIC_MOCK_AUTH: "true",
+    NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: "false",
     NEXT_PUBLIC_DISABLE_GOOGLE_AUTH: "true"
   }
 })

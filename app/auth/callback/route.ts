@@ -2,17 +2,26 @@ import { NextResponse } from "next/server"
 
 import { createClient } from "@/lib/supabase/server"
 
+const getSiteUrl = () => {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim()
+
+  if (!siteUrl) {
+    return null
+  }
+
+  try {
+    return new URL(siteUrl).toString()
+  } catch {
+    return null
+  }
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get("code")
   const next = requestUrl.searchParams.get("next")
 
-  // Get the host from headers which will be correct in both dev and prod
-  const host = request.headers.get("host") || ""
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https"
-
-  // Construct the base URL
-  const baseUrl = `${protocol}://${host}`
+  const baseUrl = requestUrl.origin
 
   if (code) {
     const supabase = createClient()
@@ -37,11 +46,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${baseUrl}/auth/setup-username`)
   }
 
-  // Alternative 1: Using environment variable (recommended)
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return NextResponse.redirect(process.env.NEXT_PUBLIC_SITE_URL)
+  const siteUrl = getSiteUrl()
+  if (siteUrl) {
+    return NextResponse.redirect(siteUrl)
   }
 
-  // Alternative 2: Using constructed URL
   return NextResponse.redirect(baseUrl)
 }

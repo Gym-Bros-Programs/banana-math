@@ -28,6 +28,7 @@ function startNext(url, key) {
       ...process.env,
       NEXT_PUBLIC_MOCK_DB: "false",
       NEXT_PUBLIC_MOCK_AUTH: "false",
+      NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: "true",
       NEXT_PUBLIC_DISABLE_GOOGLE_AUTH: "false",
       NEXT_PUBLIC_SUPABASE_URL: url,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: key

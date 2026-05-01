@@ -11,7 +11,7 @@ Use these scripts instead of editing flags by hand:
 | Cloud Supabase | `npm run dev:cloud`                       | Cloud Supabase         | Cloud auth             |
 | Production     | `npm run build && npm run start`          | Configured environment | Configured environment |
 
-`npm run dev:cloud` reads `NEXT_PUBLIC_SUPABASE_CLOUD_URL` and `NEXT_PUBLIC_SUPABASE_CLOUD_ANON_KEY`, then exposes them to the app as the standard Supabase public URL and anon key.
+`npm run dev:cloud` reads `NEXT_PUBLIC_SUPABASE_CLOUD_URL` and `NEXT_PUBLIC_SUPABASE_CLOUD_ANON_KEY`, then exposes them to the app as the standard Supabase public URL and anon key. It also enables Google auth locally so you can test the cloud Supabase OAuth flow from `http://localhost:3000`.
 
 ## Environment
 

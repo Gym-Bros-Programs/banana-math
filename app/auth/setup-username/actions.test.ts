@@ -60,18 +60,33 @@ describe("completeGoogleUsernameSetup", () => {
   it("saves unique username to profile and user metadata", async () => {
     const formData = new FormData()
     formData.set("username", "banana_champ")
+    formData.set("password", "NewPass123!")
 
     await expect(completeGoogleUsernameSetup(formData)).rejects.toThrow("NEXT_REDIRECT:/")
 
     expect(mocks.supabase.auth.updateUser).toHaveBeenCalledWith({
+      password: "NewPass123!",
       data: { username: "banana_champ" }
     })
+  })
+
+  it("requires a strong password before saving username", async () => {
+    const formData = new FormData()
+    formData.set("username", "banana_champ")
+    formData.set("password", "weakpass")
+
+    await expect(completeGoogleUsernameSetup(formData)).rejects.toThrow(
+      "NEXT_REDIRECT:/auth/setup-username?message=Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
+    )
+
+    expect(mocks.supabase.auth.updateUser).not.toHaveBeenCalled()
   })
 
   it("shows an error when username is already taken", async () => {
     mocks.maybeSingle.mockResolvedValue({ data: { id: "other-user" }, error: null })
     const formData = new FormData()
     formData.set("username", "banana_champ")
+    formData.set("password", "NewPass123!")
 
     await expect(completeGoogleUsernameSetup(formData)).rejects.toThrow(
       "NEXT_REDIRECT:/auth/setup-username?message=Username is already taken."

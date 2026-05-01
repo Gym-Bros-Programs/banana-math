@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { requestPasswordReset, signInWithGoogle, signUp, updatePassword } from "./actions"
+import { requestPasswordReset, signIn, signInWithGoogle, signUp, updatePassword } from "./actions"
 
 const mocks = vi.hoisted(() => {
   const redirect = vi.fn((url: string) => {
@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => {
   const supabase = {
     auth: {
       resetPasswordForEmail: vi.fn(),
+      signInWithPassword: vi.fn(),
       signInWithOAuth: vi.fn(),
       signUp: vi.fn(),
       updateUser: vi.fn()
@@ -25,6 +26,10 @@ const mocks = vi.hoisted(() => {
     redirect,
     headers,
     supabase,
+    checkAuthAvailability: vi.fn(async () => ({
+      username: { available: true },
+      email: { available: true }
+    })),
     createClient: vi.fn(() => supabase)
   }
 })
@@ -45,10 +50,15 @@ vi.mock("@/lib/profanity", () => ({
   isProfane: vi.fn(() => false)
 }))
 
+vi.mock("@/lib/auth/availability", () => ({
+  checkAuthAvailability: mocks.checkAuthAvailability
+}))
+
 describe("auth actions", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.supabase.auth.resetPasswordForEmail.mockResolvedValue({ error: null })
+    mocks.supabase.auth.signInWithPassword.mockResolvedValue({ error: null })
     mocks.supabase.auth.signInWithOAuth.mockResolvedValue({
       data: { url: "https://accounts.google.com/o/oauth2/v2/auth" },
       error: null
@@ -62,10 +72,79 @@ describe("auth actions", () => {
         }))
       }))
     })
+    mocks.checkAuthAvailability.mockResolvedValue({
+      username: { available: true },
+      email: { available: true }
+    })
     delete process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH
     delete process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH
     delete process.env.NEXT_PUBLIC_MOCK_AUTH
     delete process.env.NEXT_PUBLIC_MOCK_DB
+  })
+
+  it("signs in with email and password", async () => {
+    const formData = new FormData()
+    formData.set("identifier", "player@example.com")
+    formData.set("password", "NewPass123!")
+
+    await expect(signIn(formData)).rejects.toThrow("NEXT_REDIRECT:/")
+
+    expect(mocks.supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+      email: "player@example.com",
+      password: "NewPass123!"
+    })
+  })
+
+  it("tells unconfirmed users to check their email when signing in", async () => {
+    mocks.supabase.auth.signInWithPassword.mockResolvedValue({
+      error: { message: "Email not confirmed" }
+    })
+    const formData = new FormData()
+    formData.set("identifier", "player@example.com")
+    formData.set("password", "NewPass123!")
+
+    await expect(signIn(formData)).rejects.toThrow(
+      "NEXT_REDIRECT:/login?message=Check your email to confirm your account before signing in."
+    )
+  })
+
+  it("sends signup confirmation email through the auth callback flow", async () => {
+    const formData = new FormData()
+    formData.set("username", "banana_champ")
+    formData.set("email", "player@example.com")
+    formData.set("password", "NewPass123!")
+
+    await expect(signUp(formData)).rejects.toThrow(
+      "NEXT_REDIRECT:/login?message=Check your email to continue signing up."
+    )
+
+    expect(mocks.supabase.auth.signUp).toHaveBeenCalledWith({
+      email: "player@example.com",
+      password: "NewPass123!",
+      options: {
+        emailRedirectTo: "http://localhost:3000/auth/callback",
+        data: {
+          username: "banana_champ"
+        }
+      }
+    })
+  })
+
+  it("blocks signup when email already has an account", async () => {
+    mocks.checkAuthAvailability.mockResolvedValue({
+      username: { available: true },
+      email: { available: false }
+    })
+    const formData = new FormData()
+    formData.set("username", "banana_champ")
+    formData.set("email", "player@example.com")
+    formData.set("password", "NewPass123!")
+
+    await expect(signUp(formData)).rejects.toThrow(
+      "NEXT_REDIRECT:/login?message=An account already exists for this email. Sign in instead."
+    )
+
+    expect(mocks.supabase.auth.signUp).not.toHaveBeenCalled()
   })
 
   it("sends password reset email through the auth callback recovery flow", async () => {

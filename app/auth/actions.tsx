@@ -3,6 +3,7 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { checkAuthAvailability } from "@/lib/auth/availability"
 import { isProfane } from "@/lib/profanity"
 import { createClient } from "@/lib/supabase/server"
 
@@ -45,7 +46,9 @@ export async function signIn(formData: FormData) {
 
   if (error) {
     if (error.message.toLowerCase().includes("email not confirmed")) {
-      return redirect("/login?message=Please confirm your email before signing in.")
+      return redirect(
+        "/login?message=Check your email to confirm your account before signing in."
+      )
     }
     return redirect("/login?message=Could not authenticate user.")
   }
@@ -61,6 +64,16 @@ export async function signUp(formData: FormData) {
 
   if (isProfane(username)) {
     return redirect("/login?message=Username contains restricted or inappropriate language.")
+  }
+
+  const availability = await checkAuthAvailability({ username, email })
+
+  if (availability.email?.available === false) {
+    return redirect("/login?message=An account already exists for this email. Sign in instead.")
+  }
+
+  if (availability.username?.available === false) {
+    return redirect("/login?message=Username is already taken.")
   }
 
   const supabase = createClient()

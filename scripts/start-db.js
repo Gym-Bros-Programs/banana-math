@@ -38,6 +38,7 @@ function startNext() {
       ...process.env,
       NEXT_PUBLIC_MOCK_DB: "false",
       NEXT_PUBLIC_MOCK_AUTH: "false",
+      NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: "false",
       NEXT_PUBLIC_DISABLE_GOOGLE_AUTH: "true"
     }
   })
