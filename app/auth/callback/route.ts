@@ -49,11 +49,18 @@ export async function GET(request: Request) {
   const siteUrl = getSiteUrl()
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1"
 
-  // Only force redirect to SITE_URL if we are NOT in production (local dev)
-  // and we've been bounced to a non-localhost URL (the production domain)
-  if (siteUrl && !isProduction && !baseUrl.includes("localhost")) {
+  // 1. If we are on Vercel, we ALWAYS want to end up on the production siteUrl 
+  //    (or the current baseUrl if siteUrl isn't set)
+  if (isProduction) {
+    return NextResponse.redirect(siteUrl || baseUrl)
+  }
+
+  // 2. If we are in local dev, but were bounced to the production domain,
+  //    force it back to our local siteUrl (localhost)
+  if (siteUrl && !baseUrl.includes("localhost")) {
     return NextResponse.redirect(siteUrl)
   }
 
+  // 3. Otherwise, just stay where we are
   return NextResponse.redirect(baseUrl)
 }
