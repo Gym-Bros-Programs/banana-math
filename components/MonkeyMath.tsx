@@ -315,6 +315,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (isSubmitting || !userInput || !currentQuestion) return
+    if (selectedMode === "timed" && timeLeft === 0) return
     setIsSubmitting(true)
 
     const timeTaken = Date.now() - questionStart
@@ -527,7 +528,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
                 value={userInput}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
                 type="number"
-                readOnly={isSubmitting}
+                readOnly={isSubmitting || (selectedMode === "timed" && timeLeft === 0)}
                 className={`text-6xl w-80 rounded-xl p-4 mb-5 text-center focus:outline-none transition-all duration-100 ${
                   isCorrect === true
                     ? "bg-green-600 text-white"
