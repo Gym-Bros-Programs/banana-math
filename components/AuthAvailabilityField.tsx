@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState, type InputHTMLAttributes } from "react"
+import { useCallback, useEffect, useRef, useState, type InputHTMLAttributes } from "react"
+
 import { isProfane } from "@/lib/profanity"
 
 type AvailabilityKind = "username" | "email"
@@ -27,55 +28,60 @@ export function AuthAvailabilityField({
   props = {}
 }: AuthAvailabilityFieldProps) {
   const [value, setValue] = useState("")
-  const [availabilityStatus, setAvailabilityStatus] = useState<"idle" | "checking" | "available" | "taken">("idle")
+  const [availabilityStatus, setAvailabilityStatus] = useState<
+    "idle" | "checking" | "available" | "taken"
+  >("idle")
   const [isFocused, setIsFocused] = useState(false)
   const [touched, setTouched] = useState(false)
   const requestIdRef = useRef(0)
 
   const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
 
-  const checkAvailability = async (nextValue = value) => {
-    const trimmedValue = nextValue.trim()
-    const requestId = requestIdRef.current + 1
-    requestIdRef.current = requestId
+  const checkAvailability = useCallback(
+    async (nextValue = value) => {
+      const trimmedValue = nextValue.trim()
+      const requestId = requestIdRef.current + 1
+      requestIdRef.current = requestId
 
-    if (!trimmedValue) {
-      setAvailabilityStatus("idle")
-      return
-    }
-
-    if (availabilityKind === "username") {
-      if (trimmedValue.length < 3 || isProfane(trimmedValue)) {
+      if (!trimmedValue) {
         setAvailabilityStatus("idle")
         return
       }
-    } else if (availabilityKind === "email") {
-      if (!isValidEmail(trimmedValue)) {
-        setAvailabilityStatus("idle")
-        return
+
+      if (availabilityKind === "username") {
+        if (trimmedValue.length < 3 || isProfane(trimmedValue)) {
+          setAvailabilityStatus("idle")
+          return
+        }
+      } else if (availabilityKind === "email") {
+        if (!isValidEmail(trimmedValue)) {
+          setAvailabilityStatus("idle")
+          return
+        }
       }
-    }
 
-    setAvailabilityStatus("checking")
+      setAvailabilityStatus("checking")
 
-    try {
-      const params = new URLSearchParams({ [availabilityKind]: trimmedValue })
-      const response = await fetch(`/auth/availability?${params.toString()}`)
-      const data = await response.json()
+      try {
+        const params = new URLSearchParams({ [availabilityKind]: trimmedValue })
+        const response = await fetch(`/auth/availability?${params.toString()}`)
+        const data = await response.json()
 
-      if (requestIdRef.current !== requestId) return
+        if (requestIdRef.current !== requestId) return
 
-      const isAvailable = data?.[availabilityKind]?.available !== false
-      setAvailabilityStatus(isAvailable ? "available" : "taken")
-    } catch (error) {
-      if (requestIdRef.current !== requestId) return
-      setAvailabilityStatus("idle")
-    }
-  }
+        const isAvailable = data?.[availabilityKind]?.available !== false
+        setAvailabilityStatus(isAvailable ? "available" : "taken")
+      } catch (_error) {
+        if (requestIdRef.current !== requestId) return
+        setAvailabilityStatus("idle")
+      }
+    },
+    [availabilityKind, value]
+  )
 
   const getRequirementColor = (fulfilled: boolean, isAvailability: boolean, label: string) => {
     const trimmed = value.trim()
-    
+
     if (isAvailability) {
       if (availabilityStatus === "taken") return "text-red-300"
       if (availabilityStatus === "checking") return "text-[#5C5750]"
@@ -103,19 +109,20 @@ export function AuthAvailabilityField({
     }, 5000) // Back to 5s as requested
 
     return () => window.clearTimeout(timeout)
-  }, [value])
+  }, [value, checkAvailability])
 
   const baseChecks = {
     username: [
       { label: "At least 3 characters", fulfilled: value.trim().length >= 3 },
-      { label: "No inappropriate language", fulfilled: value.trim() === "" || !isProfane(value.trim()) }
+      {
+        label: "No inappropriate language",
+        fulfilled: value.trim() === "" || !isProfane(value.trim())
+      }
     ],
-    email: [
-      { label: "Valid email format", fulfilled: isValidEmail(value.trim()) }
-    ]
+    email: [{ label: "Valid email format", fulfilled: isValidEmail(value.trim()) }]
   }[availabilityKind]
 
-  const checkResults = baseChecks.map(check => ({
+  const checkResults = baseChecks.map((check) => ({
     ...check,
     color: getRequirementColor(check.fulfilled, false, check.label)
   }))
@@ -135,7 +142,7 @@ export function AuthAvailabilityField({
     })
   }
 
-  const hasErrors = checkResults.some(check => check.color === "text-red-300")
+  const hasErrors = checkResults.some((check) => check.color === "text-red-300")
   const isVisible = isFocused || (touched && hasErrors)
 
   return (
@@ -172,13 +179,12 @@ export function AuthAvailabilityField({
         />
       </div>
 
-      <div className={`absolute left-full top-0 ml-6 w-64 p-4 bg-[#211E17] border border-[#2C2920] rounded-sm ${isVisible ? "block" : "hidden"} z-50 shadow-2xl before:content-[''] before:absolute before:top-4 before:-left-2 before:w-4 before:h-4 before:bg-[#211E17] before:border-l before:border-b before:border-[#2C2920] before:rotate-45`}>
+      <div
+        className={`absolute left-full top-0 ml-6 w-64 p-4 bg-[#211E17] border border-[#2C2920] rounded-sm ${isVisible ? "block" : "hidden"} z-50 shadow-2xl before:content-[''] before:absolute before:top-4 before:-left-2 before:w-4 before:h-4 before:bg-[#211E17] before:border-l before:border-b before:border-[#2C2920] before:rotate-45`}
+      >
         <ul className="text-xs list-disc pl-4 space-y-1 relative z-10">
           {checkResults.map((check, index) => (
-            <li 
-              key={`${name}-check-${index}`}
-              className={check.color}
-            >
+            <li key={`${name}-check-${index}`} className={check.color}>
               {check.label}
             </li>
           ))}

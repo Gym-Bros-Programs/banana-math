@@ -18,26 +18,15 @@ export const metadata = {
   }
 }
 
-import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
-import { createClient } from "@/lib/supabase/server"
+import Navbar from "@/components/Navbar"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const canInitSupabaseClient = () => {
-    try {
-      createClient()
-      return true
-    } catch (_e) {
-      return false
-    }
-  }
-  const isSupabaseConnected = canInitSupabaseClient()
-
   return (
     <html lang="en">
       <body className={`${inter.className} bg-background text-text-active`}>
         <div className="min-h-screen flex flex-col w-full">
-          <Navbar isSupabaseConnected={isSupabaseConnected} />
+          <Navbar />
           <main className="flex-1 w-full flex flex-col px-10">{children}</main>
           <div className="w-full py-3 border-t border-[#2C2920] mt-auto bg-[#17150F]">
             <Footer />

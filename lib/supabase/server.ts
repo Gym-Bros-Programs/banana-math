@@ -1,8 +1,9 @@
+import fs from "fs"
+import os from "os"
+import path from "path"
+
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import fs from "fs"
-import path from "path"
-import os from "os"
 
 import { DEFAULT_MOCK_SESSIONS } from "./mock-data"
 
@@ -64,7 +65,7 @@ export const createClient = () => {
       } else {
         fs.writeFileSync(MOCK_DB_FILE, JSON.stringify(mockSessions))
       }
-    } catch (e) {
+    } catch (_e) {
       // fallback to memory if fs fails
     }
 
@@ -135,7 +136,7 @@ export const createClient = () => {
           const questions = mockQueryBuilder._questionsFilter
           const operators = mockQueryBuilder._operatorFilter
 
-          let filtered = mockSessions.filter((s: any) => {
+          const filtered = mockSessions.filter((s: any) => {
             if (s.accuracy === 0) return false
             if (mode && s.session_mode !== mode) return false
             if (diff && s.difficulty !== diff) return false

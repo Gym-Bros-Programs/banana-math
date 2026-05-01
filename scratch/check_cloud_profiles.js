@@ -11,10 +11,8 @@ async function checkProfiles() {
   }
 
   const supabase = createClient(url, key)
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("username, id")
-  
+  const { data, error } = await supabase.from("profiles").select("username, id")
+
   if (error) {
     console.error("Error fetching profiles:", error)
   } else {

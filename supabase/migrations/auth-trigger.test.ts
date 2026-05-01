@@ -23,6 +23,8 @@ describe("auth profile trigger migration", () => {
     )
 
     expect(source).toContain("NULLIF(NEW.raw_user_meta_data->>'username', '')")
-    expect(source).toContain("v_username := 'user_' || substr(replace(NEW.id::text, '-', ''), 1, 19)")
+    expect(source).toContain(
+      "v_username := 'user_' || substr(replace(NEW.id::text, '-', ''), 1, 19)"
+    )
   })
 })

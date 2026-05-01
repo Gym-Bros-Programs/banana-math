@@ -6,11 +6,7 @@ import AuthButton from "./AuthButton"
 const TEXT_CLASS =
   "text-[#EDE6DA] hover:text-btn-background hover:bg-btn-background/[0.05] transition-all duration-200 text-xl font-bold px-4 py-1.5 rounded-md"
 
-type NavbarProps = {
-  isSupabaseConnected: boolean
-}
-
-export default function Navbar({ isSupabaseConnected }: NavbarProps) {
+export default function Navbar() {
   return (
     <nav className="w-full flex items-center justify-between py-3 px-10 bg-[#12100A] border-b border-[#2C2920] sticky top-0 z-50">
       <div className="z-10">

@@ -133,7 +133,7 @@ export default function ControlBar({
   // If current selectedLength isn't in the new set, auto-pick the first option
   React.useEffect(() => {
     if (!lengthOptions.includes(selectedLength)) onLengthChange(lengthOptions[0])
-  }, [selectedMode])
+  }, [selectedMode, lengthOptions, onLengthChange, selectedLength])
 
   return (
     <div className="relative flex items-center justify-center gap-8 w-[850px] h-[140px] px-10 py-6 rounded-2xl text-sm font-medium text-muted bg-foreground/30 shadow-lg">

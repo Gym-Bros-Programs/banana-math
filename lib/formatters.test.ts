@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+
 import { formatOperatorSet, formatDate } from "./formatters"
 
 describe("Formatters", () => {

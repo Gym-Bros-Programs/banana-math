@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
-import MonkeyMath from "./MonkeyMath"
+import { describe, it, expect, vi, beforeEach } from "vitest"
+
 import * as gameActions from "@/lib/actions/game-actions"
+
+import MonkeyMath from "./MonkeyMath"
 
 // Mock the game actions
 vi.mock("@/lib/actions/game-actions", () => ({

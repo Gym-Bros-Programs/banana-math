@@ -2,11 +2,11 @@ import { redirect } from "next/navigation"
 
 import type { FilterOption } from "@/components/FilterBar"
 import FilterBar from "@/components/FilterBar"
-import type { LeaderboardEntry } from "@/lib/leaderboard"
-import { createClient } from "@/lib/supabase/server"
-import { getBestLeaderboardEntries } from "@/lib/leaderboard"
-import { OPERATOR_PRESETS } from "@/lib/types/database"
 import { formatOperatorSet, formatDate } from "@/lib/formatters"
+import type { LeaderboardEntry } from "@/lib/leaderboard"
+import { getBestLeaderboardEntries } from "@/lib/leaderboard"
+import { createClient } from "@/lib/supabase/server"
+import { OPERATOR_PRESETS } from "@/lib/types/database"
 
 export default async function AttemptHistory({
   searchParams
@@ -60,13 +60,13 @@ export default async function AttemptHistory({
     }
   }
 
-  let { data: leaderboard, error } = await query
+  const { data, error } = await query
+  let leaderboard = data || []
 
   if (error) {
     console.error("❌ Leaderboard query error:", error.message, error.details)
     leaderboard = []
   }
-  if (!leaderboard) leaderboard = []
 
   console.log(`📋 Leaderboard: ${leaderboard.length} entries (filter: ${operatorFilter})`)
 

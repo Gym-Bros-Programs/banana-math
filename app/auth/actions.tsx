@@ -48,9 +48,7 @@ export async function signIn(formData: FormData) {
   if (error) {
     console.error("Sign in error:", error)
     if (error.message.toLowerCase().includes("email not confirmed")) {
-      return redirect(
-        "/login?message=Check your email to confirm your account before signing in."
-      )
+      return redirect("/login?message=Check your email to confirm your account before signing in.")
     }
     return redirect("/login?message=Could not authenticate user.")
   }

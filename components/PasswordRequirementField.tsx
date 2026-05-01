@@ -2,8 +2,7 @@
 
 import { useState } from "react"
 
-const PASSWORD_PATTERN =
-  "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,}$"
+const PASSWORD_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{8,}$"
 
 type PasswordRequirementFieldProps = {
   className?: string
@@ -30,11 +29,10 @@ export function PasswordRequirementField({
     { label: "Include one special character (!@#$%^&*)", fulfilled: checks.hasSpecial }
   ]
 
-  const hasErrors = checkResults.some(check => !check.fulfilled)
+  const hasErrors = checkResults.some((check) => !check.fulfilled)
   const isVisible = isFocused || (touched && hasErrors)
 
-  const requirementClass = (fulfilled: boolean) =>
-    fulfilled ? "text-[#C8BCAD]" : "text-red-300"
+  const requirementClass = (fulfilled: boolean) => (fulfilled ? "text-[#C8BCAD]" : "text-red-300")
 
   return (
     <div className="relative group">
@@ -67,7 +65,9 @@ export function PasswordRequirementField({
         />
       </div>
 
-      <div className={`absolute left-full top-0 ml-6 w-64 p-4 bg-[#211E17] border border-[#2C2920] rounded-sm ${isVisible ? "block" : "hidden"} z-50 shadow-2xl before:content-[''] before:absolute before:top-4 before:-left-2 before:w-4 before:h-4 before:bg-[#211E17] before:border-l before:border-b before:border-[#2C2920] before:rotate-45`}>
+      <div
+        className={`absolute left-full top-0 ml-6 w-64 p-4 bg-[#211E17] border border-[#2C2920] rounded-sm ${isVisible ? "block" : "hidden"} z-50 shadow-2xl before:content-[''] before:absolute before:top-4 before:-left-2 before:w-4 before:h-4 before:bg-[#211E17] before:border-l before:border-b before:border-[#2C2920] before:rotate-45`}
+      >
         <ul className="text-xs list-disc pl-4 space-y-1 relative z-10">
           {checkResults.map((check, index) => (
             <li key={index} className={requirementClass(check.fulfilled)}>

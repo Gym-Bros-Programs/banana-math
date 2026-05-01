@@ -34,8 +34,8 @@ describe("auth callback route", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://www.numerify.me"
 
     const response = await GET(
-      new Request("http://localhost:3000/auth/callback?code=auth-code", {
-        headers: { host: "localhost:3000" }
+      new Request("https://banana.test/auth/callback?code=auth-code", {
+        headers: { host: "banana.test" }
       })
     )
 

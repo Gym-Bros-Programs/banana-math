@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+
 import MonkeyMath from "@/components/MonkeyMath"
 import { createClient } from "@/lib/supabase/server"
 

@@ -1,7 +1,8 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import React, { useState, useRef, useEffect } from "react"
+
+import { useRouter } from "next/navigation"
 
 export type FilterOption = {
   label: string

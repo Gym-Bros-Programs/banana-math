@@ -2,9 +2,9 @@ import { redirect } from "next/navigation"
 
 import type { FilterOption } from "@/components/FilterBar"
 import FilterBar from "@/components/FilterBar"
+import { formatOperatorSet, formatDate } from "@/lib/formatters"
 import { createClient } from "@/lib/supabase/server"
 import { OPERATOR_PRESETS, type SessionWithAnswers } from "@/lib/types/database"
-import { formatOperatorSet, formatDate } from "@/lib/formatters"
 
 export default async function AttemptHistory({
   searchParams
@@ -174,7 +174,6 @@ export default async function AttemptHistory({
           <>
             {sessions.map((session) => {
               const accuracy = Number(session.accuracy).toFixed(1)
-              const isGood = session.accuracy >= 80
 
               return (
                 <details

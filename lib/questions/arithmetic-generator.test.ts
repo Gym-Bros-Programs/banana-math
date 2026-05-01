@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest"
-import { generateLocalQuestionPool } from "./arithmetic-generator"
+
 import type { SessionConfig } from "@/lib/types/database"
+
+import { generateLocalQuestionPool } from "./arithmetic-generator"
 
 describe("Arithmetic Generator", () => {
   const baseConfig: SessionConfig = {
