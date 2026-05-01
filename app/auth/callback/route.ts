@@ -49,7 +49,7 @@ export async function GET(request: Request) {
   const siteUrl = getSiteUrl()
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1"
 
-  // 1. If we are on Vercel, we ALWAYS want to end up on the production siteUrl 
+  // 1. If we are on Vercel, we ALWAYS want to end up on the production siteUrl
   //    (or the current baseUrl if siteUrl isn't set)
   if (isProduction) {
     return NextResponse.redirect(siteUrl || baseUrl)
