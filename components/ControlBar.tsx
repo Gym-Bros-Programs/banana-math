@@ -137,12 +137,10 @@ export default function ControlBar({
 
   return (
     <div className="relative flex items-center justify-center gap-8 w-[850px] h-[140px] px-10 py-6 rounded-2xl text-sm font-medium text-muted bg-foreground/30 shadow-lg">
-      {/* Type Picker */}
       <VerticalPicker options={TYPES} selected={selectedType} onChange={onTypeChange} />
 
       <div className="w-1 h-16 bg-foreground mx-2 rounded-full" />
 
-      {/* Difficulty Picker */}
       <VerticalPicker
         options={DIFFICULTIES}
         selected={selectedDifficulty}
@@ -151,7 +149,6 @@ export default function ControlBar({
 
       <div className="w-1 h-16 bg-foreground mx-2 rounded-full" />
 
-      {/* Length count buttons */}
       <div className="flex items-center gap-4">
         {lengthOptions.map((val) => (
           <button
@@ -168,7 +165,6 @@ export default function ControlBar({
         ))}
       </div>
 
-      {/* Session Settings Menu */}
       <div ref={settingsRef} className="absolute top-3 right-3">
         <button
           onClick={() => setSettingsOpen((v) => !v)}
@@ -194,7 +190,6 @@ export default function ControlBar({
           </svg>
         </button>
 
-        {/* Settings dropdown */}
         {settingsOpen && (
           <div className="absolute top-0 left-full ml-3 w-56 bg-[#17150F] border border-[#2C2920] rounded-xl p-4 shadow-2xl z-50 flex flex-col gap-3">
             <p className="text-xs text-[#C8BCAD] font-semibold uppercase tracking-wider">Mode</p>

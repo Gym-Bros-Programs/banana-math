@@ -15,7 +15,6 @@ import {
 import type { Question, SessionConfig, QuestionSubType } from "@/lib/types/database"
 import { GUEST_SESSION_LIMIT } from "@/lib/types/database"
 
-// Type to operator set mapping
 const TYPE_TO_OPS: Record<Type, QuestionSubType[]> = {
   "+ − × ÷": ["addition", "subtraction", "multiplication", "division"],
   "+ −": ["addition", "subtraction"],
@@ -26,7 +25,6 @@ const TYPE_TO_OPS: Record<Type, QuestionSubType[]> = {
   "÷ only": ["division"]
 }
 
-// Session constants
 const DEFAULT_TIME = 15
 const GUEST_STORAGE_KEY = "banana_math_guest_sessions"
 const SETTINGS_STORAGE_KEY = "banana_math_game_settings"
@@ -329,7 +327,6 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
         setTimeElapsed((prev) => prev + newPenaltyCount)
       }
 
-      // Clear penalty effect after 1s
       setTimeout(() => setLastPenalty(null), 1000)
     }
 
@@ -343,7 +340,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     }
     const newAnswers = [...answers, record]
     setAnswers(newAnswers)
-    answersRef.current = newAnswers // Keep ref in sync
+    answersRef.current = newAnswers
 
     if (selectedMode === "question based" && newAnswers.length >= selectedLength) {
       setTimeout(() => handleSessionEnd(newAnswers), 400)

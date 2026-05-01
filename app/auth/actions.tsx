@@ -13,7 +13,6 @@ export async function signIn(formData: FormData) {
 
   let email = identifier
 
-  // If not an email and we are not in mock auth mode, lookup the email by username
   if (!identifier.includes("@") && process.env.NEXT_PUBLIC_MOCK_AUTH !== "true") {
     const { createClient: createSupabaseClient } = await import("@supabase/supabase-js")
 
