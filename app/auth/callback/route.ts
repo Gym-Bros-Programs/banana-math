@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   }
 
   const siteUrl = getSiteUrl()
-  if (siteUrl) {
+  if (siteUrl && !baseUrl.includes("localhost")) {
     return NextResponse.redirect(siteUrl)
   }
 

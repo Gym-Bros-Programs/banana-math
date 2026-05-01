@@ -26,6 +26,7 @@ export async function signIn(formData: FormData) {
       .eq("username", identifier)
       .single()
     if (!profile) {
+      console.log(`Username lookup failed for: ${identifier}`)
       return redirect("/login?message=Invalid login credentials.")
     }
     const {
@@ -45,6 +46,7 @@ export async function signIn(formData: FormData) {
   })
 
   if (error) {
+    console.error("Sign in error:", error)
     if (error.message.toLowerCase().includes("email not confirmed")) {
       return redirect(
         "/login?message=Check your email to confirm your account before signing in."
@@ -121,6 +123,7 @@ export async function requestPasswordReset(formData: FormData) {
   })
 
   if (error) {
+    console.error("Password reset error:", error)
     return redirect("/login?message=Could not send password reset email.")
   }
 
@@ -140,6 +143,7 @@ export async function updatePassword(formData: FormData) {
   })
 
   if (error) {
+    console.error("Update password error:", error)
     return redirect("/auth/reset-password?message=Could not update password.")
   }
 
@@ -147,12 +151,14 @@ export async function updatePassword(formData: FormData) {
 }
 
 export async function signInWithGoogle() {
-  const isMockDb = process.env.NEXT_PUBLIC_MOCK_DB === "true"
-  const isMockAuth = process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
-  const isGoogleAuthDisabled = process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH === "true"
-  const isGoogleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true"
+  const isGoogleAuthEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true" ||
+    (process.env.NEXT_PUBLIC_MOCK_DB === "false" &&
+      process.env.NEXT_PUBLIC_MOCK_AUTH === "false" &&
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co") &&
+      process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH !== "true")
 
-  if (isMockDb || isMockAuth || isGoogleAuthDisabled || !isGoogleAuthEnabled) {
+  if (!isGoogleAuthEnabled) {
     return redirect("/login?message=Google Sign In is not available.")
   }
 

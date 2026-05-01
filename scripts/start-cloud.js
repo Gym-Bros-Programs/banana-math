@@ -5,6 +5,7 @@ const { killPort } = require("./kill-port")
 async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_CLOUD_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_CLOUD_ANON_KEY
+  const serviceKey = process.env.SUPABASE_SERVICE_KEY_PROD
 
   if (!url || !key) {
     console.error("\n❌ Missing cloud Supabase credentials in .env.local")
@@ -17,10 +18,10 @@ async function main() {
   killPort(3000)
   console.log("🍌 Starting banana-math connected to Cloud Supabase...")
   console.log(`   URL: ${url}\n`)
-  startNext(url, key)
+  startNext(url, key, serviceKey)
 }
 
-function startNext(url, key) {
+function startNext(url, key, serviceKey) {
   const proc = spawn("npx", ["next", "dev"], {
     stdio: ["inherit", "pipe", "inherit"],
     shell: true,
@@ -30,8 +31,10 @@ function startNext(url, key) {
       NEXT_PUBLIC_MOCK_AUTH: "false",
       NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: "true",
       NEXT_PUBLIC_DISABLE_GOOGLE_AUTH: "false",
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
       NEXT_PUBLIC_SUPABASE_URL: url,
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: key
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: key,
+      SUPABASE_SERVICE_KEY: serviceKey
     }
   })
 
