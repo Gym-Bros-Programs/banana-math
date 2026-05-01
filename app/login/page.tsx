@@ -80,9 +80,7 @@ const handlePasswordReset = async (formData: FormData): Promise<void> => {
 export default function LoginPage({ searchParams }: { searchParams: { message: string } }) {
   const isGoogleAuthEnabled =
     process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true" ||
-    (process.env.NEXT_PUBLIC_MOCK_DB === "false" &&
-      process.env.NEXT_PUBLIC_MOCK_AUTH === "false" &&
-      process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co") &&
+    (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co") &&
       process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH !== "true")
 
   return (

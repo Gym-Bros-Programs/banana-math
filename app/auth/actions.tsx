@@ -16,10 +16,18 @@ export async function signIn(formData: FormData) {
   // If not an email and we are not in mock auth mode, lookup the email by username
   if (!identifier.includes("@") && process.env.NEXT_PUBLIC_MOCK_AUTH !== "true") {
     const { createClient: createSupabaseClient } = await import("@supabase/supabase-js")
-    const supabaseAdmin = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    )
+
+    const isCloud = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co")
+    const serviceKey = isCloud
+      ? process.env.SUPABASE_SERVICE_KEY_PROD || process.env.SUPABASE_SERVICE_KEY
+      : process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_KEY_PROD
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !serviceKey) {
+      console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_KEY for admin lookup")
+      return redirect("/login?message=System configuration error: Missing auth keys.")
+    }
+
+    const supabaseAdmin = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL, serviceKey)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("id")
@@ -151,9 +159,7 @@ export async function updatePassword(formData: FormData) {
 export async function signInWithGoogle() {
   const isGoogleAuthEnabled =
     process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true" ||
-    (process.env.NEXT_PUBLIC_MOCK_DB === "false" &&
-      process.env.NEXT_PUBLIC_MOCK_AUTH === "false" &&
-      process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co") &&
+    (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co") &&
       process.env.NEXT_PUBLIC_DISABLE_GOOGLE_AUTH !== "true")
 
   if (!isGoogleAuthEnabled) {

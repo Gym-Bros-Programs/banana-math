@@ -11,14 +11,13 @@ type AvailabilityResult = {
 }
 
 const getServiceKey = () => {
-  const appUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const cloudUrl = process.env.NEXT_PUBLIC_SUPABASE_CLOUD_URL
+  const isCloud = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("supabase.co")
 
-  if (appUrl && cloudUrl && appUrl === cloudUrl && process.env.SUPABASE_SERVICE_KEY_PROD) {
-    return process.env.SUPABASE_SERVICE_KEY_PROD
+  if (isCloud) {
+    return process.env.SUPABASE_SERVICE_KEY_PROD || process.env.SUPABASE_SERVICE_KEY
   }
 
-  return process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_KEY_PROD
+  return process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_KEY_PROD
 }
 
 const createAdminClient = () => {
