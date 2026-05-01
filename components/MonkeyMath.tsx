@@ -97,6 +97,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
   const answersRef = useRef<AnswerRecord[]>([]) // Ref to avoid stale closure in timer
+  const nextQuestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [questionStart, setQuestionStart] = useState(Date.now())
   const [timeLeft, setTimeLeft] = useState(DEFAULT_TIME)
   const [timeElapsed, setTimeElapsed] = useState(0)
@@ -110,14 +111,12 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const prefetchRef = useRef<PrefetchState | null>(null)
 
-  // Auto-focus input whenever a new question appears
   useEffect(() => {
     if (phase === "playing" && currentQuestion) {
       inputRef.current?.focus()
     }
   }, [currentQuestion, phase])
 
-  // Load saved settings once after mount (avoids SSR/hydration mismatch)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(SETTINGS_STORAGE_KEY)
@@ -131,7 +130,6 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     } catch {}
   }, [])
 
-  // Persist settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(
       SETTINGS_STORAGE_KEY,
@@ -144,19 +142,16 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     )
   }, [selectedType, selectedDifficulty, selectedMode, selectedLength])
 
-  // Sync back button / URL changes
   useEffect(() => {
     if (phase === "settings") {
       setTimerActive(false)
       setAnswers([])
       setCurrentQuestion(null)
-      // Only reset timeLeft if we aren't currently playing
       setTimeLeft(selectedLength)
       setPoolError(null)
     }
   }, [phase, selectedLength])
 
-  // Handle page refresh or direct links (e.g. user loads /?phase=playing with empty state)
   useEffect(() => {
     if (phase !== "settings" && questionPool.length === 0 && !isLoadingPool) {
       setPhase("settings", "replace")
@@ -168,7 +163,6 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
 
   const activeOps: QuestionSubType[] = TYPE_TO_OPS[selectedType] ?? ["addition"]
 
-  // Build session config from current state
   function buildConfig(): SessionConfig {
     return {
       category: "arithmetic",
@@ -247,7 +241,6 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     }
   }, [])
 
-  // Timer tick — pure decrement only, no side-effects inside state updater
   useEffect(() => {
     if (!timerActive) return
     const id = setInterval(() => {
@@ -260,13 +253,16 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     return () => clearInterval(id)
   }, [timerActive, selectedMode])
 
-  // Detect timer expiry — runs AFTER the render where timeLeft hits 0
   const expiryHandled = useRef(false)
   useEffect(() => {
     if (timeLeft === 0 && phase === "playing" && !expiryHandled.current) {
       expiryHandled.current = true
       setTimerActive(false)
-      handleSessionEnd(answersRef.current)
+      if (nextQuestionTimerRef.current) {
+        clearTimeout(nextQuestionTimerRef.current)
+        nextQuestionTimerRef.current = null
+      }
+      setTimeout(() => handleSessionEnd(answersRef.current), 500)
     }
     if (timeLeft > 0) expiryHandled.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -354,7 +350,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
       setIsSubmitting(false)
       return
     }
-    setTimeout(() => {
+    nextQuestionTimerRef.current = setTimeout(() => {
       nextQuestion(questionPool, poolIndex)
       setIsSubmitting(false)
     }, 300)
@@ -367,11 +363,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
     const config = buildConfig()
     const correct = finalAnswers.filter((a) => a.isCorrect).length
     const total = finalAnswers.length
-    console.log("🏁 handleSessionEnd called:", { total, correct, difficulty: selectedDifficulty })
-    if (total === 0) {
-      console.warn("⚠️ Session ended with 0 answers, skipping save.")
-      return
-    }
+    if (total === 0) return
 
     const finalT = selectedMode === "timed" ? selectedLength : timeElapsed
 
@@ -398,10 +390,8 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
 
     try {
       const sessionId = await createSession(config, correct, total, finalT, selectedDifficulty)
-      console.log("📝 createSession returned:", sessionId)
 
       if (sessionId !== "mock-session-id") {
-        console.log("💾 Saving session answers for:", sessionId)
         await saveSessionAnswers(
           sessionId,
           finalAnswers.map((a) => ({
@@ -412,10 +402,9 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
             orderInSession: a.orderInSession
           }))
         )
-        console.log("✅ Session and answers saved successfully!")
       }
     } catch (err) {
-      console.error("❌ Exception in handleSessionEnd:", err)
+      console.error("Error saving session:", err)
     }
   }
 
@@ -528,7 +517,7 @@ export default function MonkeyMath({ isGuest = true }: { isGuest?: boolean }) {
                 value={userInput}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setUserInput(e.target.value)}
                 type="number"
-                readOnly={isSubmitting || (selectedMode === "timed" && timeLeft === 0)}
+                readOnly={isSubmitting}
                 className={`text-6xl w-80 rounded-xl p-4 mb-5 text-center focus:outline-none transition-all duration-100 ${
                   isCorrect === true
                     ? "bg-green-600 text-white"

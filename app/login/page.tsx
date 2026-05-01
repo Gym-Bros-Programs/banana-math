@@ -86,10 +86,8 @@ export default function LoginPage({ searchParams }: { searchParams: { message: s
   return (
     <div className="flex-1 flex flex-col w-full items-center justify-center relative">
       <BackButton />
-      {/* Container with modal-like styling */}
       <div className="bg-[#17150F] border border-[#2C2920] p-8 rounded-md w-full max-w-4xl font-['Inter'] relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Sign In Form */}
           <form className="flex flex-col gap-6">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-[#EDE6DA]">Sign In</h2>
@@ -149,7 +147,6 @@ export default function LoginPage({ searchParams }: { searchParams: { message: s
             )}
           </form>
 
-          {/* Sign Up Form */}
           <form className="flex flex-col gap-6 border-t md:border-t-0 md:border-l border-[#2C2920] pt-8 md:pt-0 md:pl-8 relative">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-[#EDE6DA]">New User</h2>

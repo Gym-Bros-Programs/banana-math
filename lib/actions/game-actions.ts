@@ -8,7 +8,6 @@ import type { Difficulty } from "@/lib/questions/arithmetic-generator"
 import { createClient } from "@/lib/supabase/server"
 import type { SessionConfig, Question, QuestionSubType } from "@/lib/types/database"
 
-// Fetch a deduplicated question pool for a session
 export async function getQuestionsForSession(
   config: SessionConfig,
   difficulty: Difficulty = "Easy"
@@ -31,19 +30,13 @@ export async function getQuestionsForSession(
   })
 
   if (error || !data || data.length === 0) {
-    console.warn(
-      "⚠️ DB RPC get_questions_for_session returned no results:",
-      error?.message || "Empty Pool"
-    )
+    console.warn("DB RPC returned no results:", error?.message || "Empty Pool")
     return []
   }
-
-  console.log(`✅ Fetched ${data.length} questions from DB for session.`)
 
   return data as Question[]
 }
 
-// Create a new session record (called on completion)
 export async function createSession(
   config: SessionConfig,
   correctCount: number,
@@ -56,8 +49,6 @@ export async function createSession(
   const {
     data: { user }
   } = await supabase.auth.getUser()
-
-  console.log("🚀 SERVER createSession called:", { correctCount, totalCount, difficulty })
 
   const accuracy = totalCount > 0 ? (correctCount / totalCount) * 100 : 0
   const sortedOperatorSet = [...config.operatorSet].sort()
@@ -88,22 +79,16 @@ export async function createSession(
     .single()
 
   if (error || !data) {
-    console.error("❌ DB Error creating session:", error)
-    if (error?.details) console.error("Details:", error.details)
-    if (error?.hint) console.error("Hint:", error.hint)
+    console.error("DB error creating session:", error)
     return "mock-session-id"
   }
 
-  console.log("✅ Session saved successfully to DB:", data.id)
-
-  // Compute and store percentile asynchronously (don't block the response)
   updateSessionPercentile(data.id).catch(console.error)
   revalidatePath("/attempts")
 
   return data.id
 }
 
-// Save answer records for a session in bulk
 export async function saveSessionAnswers(
   sessionId: string,
   answers: Array<{
@@ -134,7 +119,6 @@ export async function saveSessionAnswers(
   }
 }
 
-// Internal helper to update percentile rank
 async function updateSessionPercentile(sessionId: string): Promise<void> {
   const supabase = createClient()
 
@@ -150,7 +134,6 @@ async function updateSessionPercentile(sessionId: string): Promise<void> {
   await supabase.from("sessions").update({ percentile }).eq("id", sessionId)
 }
 
-// Retrieve session history for the authenticated user
 export async function getUserSessions(): Promise<any[]> {
   const supabase = createClient()
 
@@ -183,11 +166,10 @@ export async function getUserSessions(): Promise<any[]> {
   return data
 }
 
-// Check if a session's configuration is eligible for the global leaderboard
 const STANDARD_PRESETS: string[][] = [
-  ["addition", "division", "multiplication", "subtraction"], // all 4
-  ["addition", "subtraction"], // +- only
-  ["division", "multiplication"], // */ only
+  ["addition", "division", "multiplication", "subtraction"],
+  ["addition", "subtraction"],
+  ["division", "multiplication"],
   ["addition"],
   ["subtraction"],
   ["multiplication"],
@@ -199,9 +181,7 @@ function isLeaderboardEligible(config: SessionConfig): boolean {
   return STANDARD_PRESETS.some((p) => p.slice().sort().join(",") === sorted)
 }
 
-// Helpers and Mock data
 function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "Easy"): Question[] {
-  // If in UI testing mode, just return bare minimum 1+1=2 questions
   if (process.env.NEXT_PUBLIC_MOCK_DB === "true") {
     const poolSize = getQuestionPoolSize(config)
     return Array(poolSize)
@@ -221,7 +201,6 @@ function getFallbackQuestions(config: SessionConfig, difficulty: Difficulty = "E
       }))
   }
 
-  // Generates a real playable pool locally — game works without any DB connection
   const poolSize = getQuestionPoolSize(config)
   return generateLocalQuestionPool(config, poolSize, difficulty)
 }

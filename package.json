@@ -52,6 +52,7 @@
     "baseline-browser-mapping": "2.10.23",
     "caniuse-lite": "1.0.30001791",
     "dotenv": "17.2.1",
+    "framer-motion": "12.38.0",
     "geist": "1.4.2",
     "next": "14.2.31",
     "postcss": "8.4.47",

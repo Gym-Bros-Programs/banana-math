@@ -31,7 +31,6 @@ export default async function AttemptHistory({
 
   let sessions: SessionWithAnswers[] = []
 
-  // If logged in, fetch user's sessions. If not, fetch sessions where user_id is null (Guest sessions)
   let query = supabase
     .from("sessions")
     .select(
@@ -72,9 +71,6 @@ export default async function AttemptHistory({
     sessions = data as unknown as SessionWithAnswers[]
   }
 
-  // Mock data fallback is handled directly in server.ts when MOCK_DB is true
-
-  // Client-side filter for mock data (when user is null/mock)
   if (modeFilter || diffFilter || durationFilter || questionsFilter) {
     sessions = sessions.filter((s) => {
       if (modeFilter && s.session_mode !== modeFilter) return false
@@ -150,18 +146,10 @@ export default async function AttemptHistory({
 
   return (
     <div
-      className="w-full flex flex-col pt-10 pb-4 font-['Inter'] overflow-hidden"
+      className="w-full flex flex-col pt-2 pb-4 font-['Inter'] overflow-hidden"
       style={{ height: "calc(100vh - 115px)" }}
     >
       <div className="w-full shrink-0">
-        {/* Header */}
-        <div className="border-b border-[#2C2920] pb-4 text-left">
-          <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">
-            Session History
-          </h1>
-          <p className="text-[#C8BCAD] mt-1 text-sm">Your past practice sessions</p>
-        </div>
-
         <FilterBar options={filterOptions} currentParams={searchParams} />
       </div>
 
@@ -180,10 +168,8 @@ export default async function AttemptHistory({
                   key={session.id}
                   className="rounded-xl border border-[#2C2920] bg-[#17150F] overflow-hidden group"
                 >
-                  {/* Session summary row */}
                   <summary className="flex items-center justify-between px-6 py-3 cursor-pointer hover:bg-[#211E17] transition-colors list-none">
                     <div className="flex items-center gap-6">
-                      {/* QPM Score */}
                       <div className="flex flex-col items-center min-w-[70px]">
                         <span className="text-2xl font-black text-[hsl(50,100%,52%)] leading-none">
                           {session.cqpm ?? 0}
@@ -193,10 +179,8 @@ export default async function AttemptHistory({
                         </span>
                       </div>
 
-                      {/* Accuracy badge - SVG progress circle */}
                       <div className="relative w-14 h-14 flex items-center justify-center">
                         <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
-                          {/* Red track (incorrect/background) */}
                           <circle
                             cx="28"
                             cy="28"
@@ -205,7 +189,6 @@ export default async function AttemptHistory({
                             strokeWidth="8"
                             fill="transparent"
                           />
-                          {/* Yellow progress (accuracy) */}
                           <circle
                             cx="28"
                             cy="28"
@@ -224,9 +207,7 @@ export default async function AttemptHistory({
                         </span>
                       </div>
 
-                      {/* Unified Info Row */}
                       <div className="flex items-center gap-6 text-[#EDE6DA] font-semibold">
-                        {/* Operator Chip */}
                         <div className="bg-[#211E17] px-2.5 py-1 rounded border border-[#2C2920] text-[#EDE6DA] font-bold text-xs flex items-center gap-1.5 min-w-[95px] justify-center">
                           <span className="text-base leading-none">
                             {formatOperatorSet(session.operator_set)}
@@ -238,7 +219,6 @@ export default async function AttemptHistory({
 
                         <div className="h-4 w-px bg-[#2C2920]" />
 
-                        {/* Stats Segment */}
                         <div className="flex items-center gap-3 whitespace-nowrap min-w-[155px]">
                           <div className="flex items-baseline gap-1 min-w-[80px] justify-end">
                             <span className="text-xl font-bold leading-none">
@@ -267,7 +247,6 @@ export default async function AttemptHistory({
 
                         <div className="h-4 w-px bg-[#2C2920]" />
 
-                        {/* Length Segment */}
                         <div className="min-w-[55px] text-center">
                           <span className="text-[#C8BCAD] text-lg font-medium">
                             {session.session_mode === "timed"
@@ -278,7 +257,6 @@ export default async function AttemptHistory({
 
                         <div className="h-4 w-px bg-[#2C2920]" />
 
-                        {/* Date Segment */}
                         <span
                           suppressHydrationWarning
                           className="text-[#8B8476] text-sm font-normal whitespace-nowrap"
@@ -295,7 +273,6 @@ export default async function AttemptHistory({
                     </div>
                   </summary>
 
-                  {/* Question breakdown */}
                   {session.session_answers && session.session_answers.length > 0 && (
                     <div className="border-t border-[#2C2920] px-6 py-4">
                       <table className="w-full text-sm">

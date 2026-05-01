@@ -56,7 +56,8 @@ export default async function AttemptHistory({
   if (operatorFilter && operatorFilter !== "all") {
     const ops = OPERATOR_PRESETS[operatorFilter as keyof typeof OPERATOR_PRESETS]
     if (ops && ops.length > 0) {
-      query = query.contains("operator_set", [...ops].sort())
+      const sorted = [...ops].sort()
+      query = query.contains("operator_set", sorted).containedBy("operator_set", sorted)
     }
   }
 
@@ -64,13 +65,10 @@ export default async function AttemptHistory({
   let leaderboard = data || []
 
   if (error) {
-    console.error("❌ Leaderboard query error:", error.message, error.details)
+    console.error("Leaderboard query error:", error.message, error.details)
     leaderboard = []
   }
 
-  console.log(`📋 Leaderboard: ${leaderboard.length} entries (filter: ${operatorFilter})`)
-
-  // Fetch display names for all user_ids in the leaderboard
   const typedLeaderboard = leaderboard as LeaderboardEntry[]
   const userIds = Array.from(
     new Set(typedLeaderboard.map((entry) => entry.user_id).filter(Boolean))
@@ -92,7 +90,6 @@ export default async function AttemptHistory({
 
   const dedupedLeaderboard = getBestLeaderboardEntries(typedLeaderboard)
 
-  // Find user's best entry and rank
   const userEntry = dedupedLeaderboard.find((e) => e.user_id === user?.id)
   const userRank = userEntry ? dedupedLeaderboard.indexOf(userEntry) + 1 : null
   const topN = dedupedLeaderboard.slice(0, 50)
@@ -172,17 +169,10 @@ export default async function AttemptHistory({
 
   return (
     <div
-      className="w-full flex flex-col pt-10 pb-4 font-['Inter'] relative overflow-hidden"
+      className="w-full flex flex-col pt-2 pb-4 font-['Inter'] relative overflow-hidden"
       style={{ height: "calc(100vh - 115px)" }}
     >
       <div className="w-full shrink-0">
-        <div className="border-b border-[#2C2920] pb-4 text-left">
-          <h1 className="text-4xl font-extrabold tracking-tight text-[hsl(50,100%,52%)]">
-            Leaderboard
-          </h1>
-          <p className="text-[#C8BCAD] mt-1 text-sm">Global ranking by score (Top 50)</p>
-        </div>
-
         <FilterBar options={filterOptions} currentParams={searchParams} />
       </div>
 
@@ -270,7 +260,6 @@ export default async function AttemptHistory({
         </table>
       </div>
 
-      {/* Sticky Personal Rank */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#17150F] border-t border-[#2C2920] px-20 py-6 flex items-center justify-between z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">

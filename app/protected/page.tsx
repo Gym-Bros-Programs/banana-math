@@ -41,13 +41,11 @@ export default async function ProtectedPage({
   return (
     <div className="w-full flex-1 flex flex-col py-8 font-['Inter']">
       <div className="w-full space-y-12">
-        {/* Header */}
         <div className="border-b border-[#2C2920] pb-6 text-left">
           <h1 className="text-4xl font-bold tracking-tight text-[#EDE6DA]">Your Profile</h1>
           <p className="text-[#C8BCAD] mt-2">Personal stats and account settings</p>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-6 rounded-2xl bg-[#17150F] border border-[#2C2920] flex flex-col gap-2">
             <span className="text-[#C8BCAD] text-sm uppercase font-semibold tracking-wider">
@@ -69,7 +67,6 @@ export default async function ProtectedPage({
           </div>
         </div>
 
-        {/* Account Details */}
         <div className="w-full space-y-6">
           <h3 className="text-2xl font-bold text-[#EDE6DA]">Account Settings</h3>
 
