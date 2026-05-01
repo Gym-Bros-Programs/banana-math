@@ -47,11 +47,11 @@ export async function GET(request: Request) {
   }
 
   const siteUrl = getSiteUrl()
-  const isVercel = process.env.VERCEL === "1"
+  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1"
 
-  // Only force redirect to SITE_URL if we are NOT on Vercel (local dev)
+  // Only force redirect to SITE_URL if we are NOT in production (local dev)
   // and we've been bounced to a non-localhost URL (the production domain)
-  if (siteUrl && !isVercel && !baseUrl.includes("localhost")) {
+  if (siteUrl && !isProduction && !baseUrl.includes("localhost")) {
     return NextResponse.redirect(siteUrl)
   }
 
