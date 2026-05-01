@@ -10,7 +10,11 @@ const getSiteUrl = () => {
   }
 
   try {
-    return new URL(siteUrl).toString()
+    const parsed = new URL(siteUrl)
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      return null
+    }
+    return parsed.toString()
   } catch {
     return null
   }
