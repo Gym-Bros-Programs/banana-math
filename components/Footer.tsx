@@ -16,7 +16,7 @@ const Footer = () => (
       </a>
     </div>
     <div className="opacity-50">
-      <span>v0.0.1</span>
+      <span>v1.0.0</span>
     </div>
   </footer>
 )
