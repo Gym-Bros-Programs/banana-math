@@ -1,6 +1,8 @@
 # Banana Math
 
-Mental math practice app built with Next.js, Supabase, and Tailwind CSS.
+**v1.0.0** | [numerify.me](https://numerify.me)
+
+Mental math practice app 
 
 ## Features
 
