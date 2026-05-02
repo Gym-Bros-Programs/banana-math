@@ -2,7 +2,7 @@
 
 **v1.0.0** | [numerify.me](https://numerify.me)
 
-Mental math practice app 
+Mental math practice app
 
 ## Features
 
